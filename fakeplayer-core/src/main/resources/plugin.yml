@@ -113,6 +113,10 @@ permissions:
     description: 'Allow player to run /cb skin (SkinsRestorer)'
   cactusbot.command.arena:
     description: 'Allow player to manage /cb arena'
+  cactusbot.command.queue:
+    description: 'Allow player to use /cb queue'
+  cactusbot.command.gamemode:
+    description: 'Allow player to manage /cb gamemode'
   cactusbot.config.replenish:
     description: 'Allow player to configure cactus bots can replenish'
   cactusbot.config.replenish.chest:
@@ -140,6 +144,8 @@ permissions:
       - cactusbot.command.set
       - cactusbot.command.preset
       - cactusbot.command.arena
+      - cactusbot.command.queue
+      - cactusbot.command.gamemode
 
   cactusbot.tp:
     description: 'Includes all permissions about teleport'

@@ -25,6 +25,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.Title.Times;
 import org.bukkit.Bukkit;
@@ -48,14 +49,16 @@ public class ArenaManager {
     private final FakeplayerConfig config;
     private final FakeplayerManager fakeplayerManager;
     private final ActionManager actionManager;
+    private final ArenaRegenManager regenManager;
     private final Map<String, ArenaManager.ActiveMatch> active = new ConcurrentHashMap();
 
     @Inject
-    public ArenaManager(FakeplayerConfig fakeplayerconfig, FakeplayerManager fakeplayermanager, ActionManager actionmanager) {
+    public ArenaManager(FakeplayerConfig fakeplayerconfig, FakeplayerManager fakeplayermanager, ActionManager actionmanager, ArenaRegenManager arenaRegenManager) {
         super();
         this.config = fakeplayerconfig;
         this.fakeplayerManager = fakeplayermanager;
         this.actionManager = actionmanager;
+        this.regenManager = arenaRegenManager;
     }
 
     public @Nullable PvpArenaDefinition get(@NotNull String s) {
@@ -149,7 +152,6 @@ public class ArenaManager {
     public void endMatch(@NotNull String s, ArenaManager.@Nullable MatchResult arenamanager_matchresult) {
         ArenaManager.ActiveMatch arenamanager_activematch = (ArenaManager.ActiveMatch) this.active.remove(s);
 
-        this.setBusy(s, false);
         if (arenamanager_activematch != null) {
             this.removeLiveBotImmediately(arenamanager_activematch, "Arena match ended");
             Player player = Bukkit.getPlayer(arenamanager_activematch.playerId);
@@ -168,6 +170,9 @@ public class ArenaManager {
                 }, 0L);
             }
 
+            this.releaseArena(s);
+        } else {
+            this.releaseArena(s);
         }
     }
 
@@ -225,10 +230,12 @@ public class ArenaManager {
 
                 if (player1 != null && player1.isOnline()) {
                     if (arenamanager_activematch.playerRoundsWon < arenamanager_activematch.roundsToWin && arenamanager_activematch.botRoundsWon < arenamanager_activematch.roundsToWin) {
+                        this.showRoundScore(player1, arenamanager_activematch.playerRoundsWon, arenamanager_activematch.botRoundsWon);
                         Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
                             Player player2 = arenamanager_activematch.botId == null ? null : Bukkit.getPlayer(arenamanager_activematch.botId);
 
                             if (player2 != null && player2.isOnline()) {
+                                this.stopBotAutomation(player2);
                                 this.fakeplayerManager.remove(player2.getName(), "Round completed");
                             }
 
@@ -565,7 +572,14 @@ public class ArenaManager {
         Component component = this.config.formatConfiguredMessage(s3, hashmap);
 
         player.showTitle(Title.title(component, Component.text(arenamanager_activematch.playerRoundsWon + " - " + arenamanager_activematch.botRoundsWon), Times.times(Duration.ofMillis(150L), Duration.ofSeconds(2L), Duration.ofMillis(500L))));
-        this.playArcadeSound(player, arenamanager_matchresult == ArenaManager.MatchResult.WIN ? this.config.getArcadeWinSound() : this.config.getArcadeLoseSound(), arenamanager_matchresult == ArenaManager.MatchResult.WIN ? this.config.getArcadeWinPitch() : this.config.getArcadeLosePitch());
+        if (arenamanager_matchresult == ArenaManager.MatchResult.WIN) {
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.45F);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.9F, 1.25F);
+            this.playVictoryAnimation(player);
+        } else {
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1.0F, 0.7F);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 0.8F, 0.8F);
+        }
     }
 
     private void playVictoryAnimation(@NotNull Player player) {
@@ -638,6 +652,23 @@ public class ArenaManager {
         player.setSprinting(false);
         player.setSneaking(false);
         player.setFireTicks(0);
+    }
+
+    private void showRoundScore(@NotNull Player player, int playerRoundsWon, int botRoundsWon) {
+        player.showTitle(Title.title(Component.text(playerRoundsWon + " - " + botRoundsWon, NamedTextColor.YELLOW), Component.text("Next round", NamedTextColor.GRAY), Times.times(Duration.ofMillis(100L), Duration.ofSeconds(2L), Duration.ofMillis(200L))));
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.9F, 1.1F);
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_HAT, 0.7F, 1.6F);
+    }
+
+    private void releaseArena(@NotNull String arena) {
+        if (this.regenManager.hasSnapshot(arena)) {
+            boolean started = this.regenManager.regenerateAsync(arena, () -> this.setBusy(arena, false));
+            if (!started) {
+                this.setBusy(arena, false);
+            }
+        } else {
+            this.setBusy(arena, false);
+        }
     }
 
     private static enum MatchResult {

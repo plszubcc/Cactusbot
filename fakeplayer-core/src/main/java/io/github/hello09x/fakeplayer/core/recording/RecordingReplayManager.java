@@ -83,6 +83,7 @@ public class RecordingReplayManager implements Listener {
         Player bot = session.bot;
 
         if (bot.isOnline() && !this.fakeplayerManager.isNotFake(bot)) {
+            this.runDelayedUse(session);
             RecordedFrame sample = this.nextSample(session);
 
             if (sample != null) {
@@ -100,8 +101,12 @@ public class RecordingReplayManager implements Listener {
                 }
 
                 Player currentTarget = this.targetResolver.resolve(bot);
+                boolean exactAim = sample.useItem() || sample.jump() || sample.glide() || "wind_charge".equalsIgnoreCase(String.valueOf(sample.heldItem()));
 
-                if (currentTarget != null && sample.targetAngle() != null && sample.targetPitchAngle() != null) {
+                if (exactAim) {
+                    handle.setYRot(this.lerpAngle(handle.getYRot(), sample.yaw() + this.randomFloat(-0.35F, 0.35F), 0.9F));
+                    handle.setXRot(this.lerp(handle.getXRot(), sample.pitch() + this.randomFloat(-0.25F, 0.25F), 0.9F));
+                } else if (currentTarget != null && sample.targetAngle() != null && sample.targetPitchAngle() != null) {
                     Vector botEye = bot.getEyeLocation().toVector();
                     Vector targetEye = currentTarget.getEyeLocation().toVector();
                     Vector delta = targetEye.clone().subtract(botEye);
@@ -130,9 +135,15 @@ public class RecordingReplayManager implements Listener {
                     session.lastGlideTick = session.tick;
                 }
 
-                if (sample.useItem() && session.tick - session.lastUseTick >= 4) {
-                    this.fakeplayerManager.dispatchCommand(bot, this.useCommandFor(bot, sample));
-                    session.lastUseTick = session.tick;
+                if (sample.useItem() && session.tick - session.lastUseTick >= 2) {
+                    if (sample.jump() || "wind_charge".equalsIgnoreCase(String.valueOf(sample.heldItem()))) {
+                        session.delayedUseTick = session.tick + 1;
+                        session.delayedUseHeldItem = sample.heldItem();
+                        session.delayedUseYaw = sample.yaw();
+                        session.delayedUsePitch = sample.pitch();
+                    } else {
+                        this.dispatchUse(bot, session, sample.heldItem(), sample.yaw(), sample.pitch());
+                    }
                 }
 
                 if (sample.attack() && currentTarget != null && this.targetResolver.distance(bot, currentTarget) <= 4.5D && session.tick - session.lastAttackTick >= 8) {
@@ -213,6 +224,37 @@ public class RecordingReplayManager implements Listener {
         }
     }
 
+    private void runDelayedUse(RecordingReplayManager.@NotNull ReplaySession session) {
+        if (session.delayedUseTick != session.tick) {
+            return;
+        }
+
+        this.dispatchUse(session.bot, session, session.delayedUseHeldItem, session.delayedUseYaw, session.delayedUsePitch);
+        session.delayedUseTick = Integer.MIN_VALUE;
+        session.delayedUseHeldItem = null;
+    }
+
+    private void dispatchUse(@NotNull Player bot, RecordingReplayManager.@NotNull ReplaySession session, @Nullable String heldItem, float yaw, float pitch) {
+        NMSServerPlayer handle = this.bridge.fromPlayer(bot);
+
+        handle.setYRot(yaw);
+        handle.setXRot(pitch);
+        this.fakeplayerManager.dispatchCommand(bot, this.useCommandFor(bot, heldItem));
+        session.lastUseTick = session.tick;
+    }
+
+    private @NotNull String useCommandFor(@NotNull Player bot, @Nullable String heldItem) {
+        if (heldItem == null) {
+            return "cb use once " + bot.getName();
+        }
+
+        return switch (heldItem.toLowerCase(Locale.ROOT)) {
+            case "obsidian" -> "cb place " + bot.getName() + " 3.0 front";
+            case "end_crystal" -> "cb crystal place " + bot.getName() + " 4.0";
+            default -> "cb use once " + bot.getName();
+        };
+    }
+
     private static final class ReplaySession {
 
         private final String name;
@@ -226,7 +268,11 @@ public class RecordingReplayManager implements Listener {
         private int lastUseTick = -536870912;
         private int lastGlideTick = -536870912;
         private int lastHoldTick = -536870912;
+        private int delayedUseTick = Integer.MIN_VALUE;
+        private float delayedUseYaw;
+        private float delayedUsePitch;
         private String lastHeldItem;
+        private String delayedUseHeldItem;
 
         private ReplaySession(String name, Player bot, RecordingData data) {
             super();
