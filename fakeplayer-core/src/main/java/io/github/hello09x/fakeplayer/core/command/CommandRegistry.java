@@ -24,6 +24,7 @@ import io.github.hello09x.fakeplayer.core.command.impl.CustomActionCommand;
 import io.github.hello09x.fakeplayer.core.command.impl.DebugCommand;
 import io.github.hello09x.fakeplayer.core.command.impl.DistanceCommand;
 import io.github.hello09x.fakeplayer.core.command.impl.ExpmeCommand;
+import io.github.hello09x.fakeplayer.core.command.impl.GamemodeCommand;
 import io.github.hello09x.fakeplayer.core.command.impl.GlideCommand;
 import io.github.hello09x.fakeplayer.core.command.impl.HoldCommand;
 import io.github.hello09x.fakeplayer.core.command.impl.InvseeCommand;
@@ -35,6 +36,7 @@ import io.github.hello09x.fakeplayer.core.command.impl.MaceCommand;
 import io.github.hello09x.fakeplayer.core.command.impl.MoveCommand;
 import io.github.hello09x.fakeplayer.core.command.impl.PlaceCommand;
 import io.github.hello09x.fakeplayer.core.command.impl.PresetCommand;
+import io.github.hello09x.fakeplayer.core.command.impl.QueueCommand;
 import io.github.hello09x.fakeplayer.core.command.impl.RecordCommand;
 import io.github.hello09x.fakeplayer.core.command.impl.ReloadCommand;
 import io.github.hello09x.fakeplayer.core.command.impl.RespawnCommand;
@@ -146,6 +148,10 @@ public class CommandRegistry {
     @Inject
     private ArenaCommand arenaCommand;
     @Inject
+    private QueueCommand queueCommand;
+    @Inject
+    private GamemodeCommand gamemodeCommand;
+    @Inject
     private FakeplayerConfig config;
 
     public CommandRegistry() {
@@ -154,7 +160,7 @@ public class CommandRegistry {
 
     public void register() {
         CommandAPICommand commandapicommand = (CommandAPICommand) ((CommandAPICommand) ((CommandAPICommand) ((CommandAPICommand) Commands.command("cactusbot").withAliases(new String[]{"cb"})).withHelp(ComponentUtils.toString(Component.translatable("fakeplayer.command.fp.short-description"), (Locale) null), ComponentUtils.toString(Component.translatable("fakeplayer.command.fp.full-description"), (Locale) null))).withUsage(new String[]{"type cb ? for more information", "hello09x [汤姆]"})).withPermission("cactusbot.command.spawn");
-        CommandAPICommand[] acommandapicommand = new CommandAPICommand[53];
+        CommandAPICommand[] acommandapicommand = new CommandAPICommand[55];
         CommandAPICommand commandapicommand1 = (CommandAPICommand) ((CommandAPICommand) ((CommandAPICommand) ((CommandAPICommand) Commands.command("select").withPermission("cactusbot.command.select")).withShortDescription("fakeplayer.command.select.description")).withRequirement(CommandSupports::needSelect)).withOptionalArguments(new Argument[]{CommandSupports.fakeplayer("name")});
         SelectCommand selectcommand = this.selectCommand;
 
@@ -190,7 +196,7 @@ public class CommandRegistry {
         acommandapicommand1[3] = (CommandAPICommand) commandapicommand2.executes(presetcommand::inventorySet, new ExecutorType[0]);
         acommandapicommand[3] = (CommandAPICommand) commandapicommand1.withSubcommands(acommandapicommand1);
         commandapicommand1 = (CommandAPICommand) ((CommandAPICommand) Commands.command("arena").withPermission("cactusbot.command.arena")).withShortDescription("fakeplayer.command.arena.description");
-        acommandapicommand1 = new CommandAPICommand[10];
+        acommandapicommand1 = new CommandAPICommand[12];
         commandapicommand2 = (CommandAPICommand) Commands.command("create").withArguments(new Argument[]{Commands.text("arena")});
         ArenaCommand arenacommand = this.arenaCommand;
 
@@ -243,7 +249,16 @@ public class CommandRegistry {
         arenacommand1 = this.arenaCommand;
         Objects.requireNonNull(this.arenaCommand);
         acommandapicommand2[2] = (CommandAPICommand) commandapicommand3.executes(arenacommand1::setLobby, new ExecutorType[0]);
-        acommandapicommand1[9] = (CommandAPICommand) commandapicommand2.withSubcommands(acommandapicommand2);
+        commandapicommand2 = (CommandAPICommand) Commands.command("setcorner").withArguments(new Argument[]{Commands.text("arena"), Commands.text("corner")});
+        arenacommand = this.arenaCommand;
+        Objects.requireNonNull(this.arenaCommand);
+        acommandapicommand1[9] = (CommandAPICommand) commandapicommand2.executes(arenacommand::setcorner, new ExecutorType[0]);
+        commandapicommand2 = (CommandAPICommand) Commands.command("regen").withArguments(new Argument[]{Commands.text("arena")});
+        arenacommand = this.arenaCommand;
+        Objects.requireNonNull(this.arenaCommand);
+        acommandapicommand1[10] = (CommandAPICommand) commandapicommand2.executes(arenacommand::regen, new ExecutorType[0]);
+        commandapicommand2 = Commands.command("set");
+        acommandapicommand1[11] = (CommandAPICommand) commandapicommand2.withSubcommands(acommandapicommand2);
         acommandapicommand[4] = (CommandAPICommand) commandapicommand1.withSubcommands(acommandapicommand1);
         commandapicommand1 = (CommandAPICommand) ((CommandAPICommand) ((CommandAPICommand) ((CommandAPICommand) Commands.command("kill").withPermission("cactusbot.command.kill")).withShortDescription("fakeplayer.command.kill.description")).withRequirement(CommandSupports::hasFakeplayer)).withOptionalArguments(new Argument[]{CommandSupports.fakeplayers("names")});
         KillCommand killcommand = this.killCommand;
@@ -521,6 +536,51 @@ public class CommandRegistry {
         Objects.requireNonNull(this.debugCommand);
         acommandapicommand8[0] = (CommandAPICommand) commandapicommand2.executes(debugcommand::sendPluginMessage, new ExecutorType[0]);
         acommandapicommand[52] = (CommandAPICommand) commandapicommand1.withSubcommands(acommandapicommand8);
+        commandapicommand1 = (CommandAPICommand) ((CommandAPICommand) Commands.command("gamemode").withPermission("cactusbot.command.gamemode")).withShortDescription("Manage queue gamemodes");
+        CommandAPICommand[] acommandapicommand9 = new CommandAPICommand[8];
+        commandapicommand2 = (CommandAPICommand) Commands.command("create").withArguments(new Argument[]{Commands.text("name")});
+        GamemodeCommand gamemodecommand = this.gamemodeCommand;
+        Objects.requireNonNull(this.gamemodeCommand);
+        acommandapicommand9[0] = (CommandAPICommand) commandapicommand2.executes(gamemodecommand::create, new ExecutorType[0]);
+        commandapicommand2 = (CommandAPICommand) Commands.command("delete").withArguments(new Argument[]{Commands.text("name")});
+        gamemodecommand = this.gamemodeCommand;
+        Objects.requireNonNull(this.gamemodeCommand);
+        acommandapicommand9[1] = (CommandAPICommand) commandapicommand2.executes(gamemodecommand::delete, new ExecutorType[0]);
+        commandapicommand2 = Commands.command("list");
+        gamemodecommand = this.gamemodeCommand;
+        Objects.requireNonNull(this.gamemodeCommand);
+        acommandapicommand9[2] = (CommandAPICommand) commandapicommand2.executes(gamemodecommand::list, new ExecutorType[0]);
+        commandapicommand2 = (CommandAPICommand) Commands.command("seticon").withArguments(new Argument[]{Commands.text("name")});
+        gamemodecommand = this.gamemodeCommand;
+        Objects.requireNonNull(this.gamemodeCommand);
+        acommandapicommand9[3] = (CommandAPICommand) commandapicommand2.executes(gamemodecommand::seticon, new ExecutorType[0]);
+        commandapicommand2 = (CommandAPICommand) Commands.command("addarena").withArguments(new Argument[]{Commands.text("name"), Commands.text("arena")});
+        gamemodecommand = this.gamemodeCommand;
+        Objects.requireNonNull(this.gamemodeCommand);
+        acommandapicommand9[4] = (CommandAPICommand) commandapicommand2.executes(gamemodecommand::addarena, new ExecutorType[0]);
+        commandapicommand2 = (CommandAPICommand) Commands.command("removearena").withArguments(new Argument[]{Commands.text("name"), Commands.text("arena")});
+        gamemodecommand = this.gamemodeCommand;
+        Objects.requireNonNull(this.gamemodeCommand);
+        acommandapicommand9[5] = (CommandAPICommand) commandapicommand2.executes(gamemodecommand::removearena, new ExecutorType[0]);
+        commandapicommand2 = (CommandAPICommand) Commands.command("queue").withArguments(new Argument[]{Commands.text("name")});
+        gamemodecommand = this.gamemodeCommand;
+        Objects.requireNonNull(this.gamemodeCommand);
+        acommandapicommand9[6] = (CommandAPICommand) commandapicommand2.executes(gamemodecommand::queue, new ExecutorType[0]);
+        commandapicommand2 = (CommandAPICommand) Commands.command("leave").withArguments(new Argument[]{Commands.text("name")});
+        gamemodecommand = this.gamemodeCommand;
+        Objects.requireNonNull(this.gamemodeCommand);
+        acommandapicommand9[7] = (CommandAPICommand) commandapicommand2.executes(gamemodecommand::leave, new ExecutorType[0]);
+        acommandapicommand[53] = (CommandAPICommand) commandapicommand1.withSubcommands(acommandapicommand9);
+        commandapicommand1 = (CommandAPICommand) ((CommandAPICommand) ((CommandAPICommand) Commands.command("queue").withPermission("cactusbot.command.queue")).withShortDescription("Join a gamemode queue")).withArguments(new Argument[]{Commands.text("gamemode")});
+        QueueCommand queuecommand = this.queueCommand;
+        Objects.requireNonNull(this.queueCommand);
+        commandapicommand1 = (CommandAPICommand) commandapicommand1.executes(queuecommand::queue, new ExecutorType[0]);
+        CommandAPICommand[] acommandapicommand10 = new CommandAPICommand[1];
+        commandapicommand2 = Commands.command("leave");
+        QueueCommand queuecommand1 = this.queueCommand;
+        Objects.requireNonNull(this.queueCommand);
+        acommandapicommand10[0] = (CommandAPICommand) commandapicommand2.executes(queuecommand1::leave, new ExecutorType[0]);
+        acommandapicommand[54] = (CommandAPICommand) commandapicommand1.withSubcommands(acommandapicommand10);
         CommandAPICommand root = (CommandAPICommand) commandapicommand.withSubcommands(acommandapicommand);
 
         root.register();

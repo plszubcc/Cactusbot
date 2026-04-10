@@ -63,6 +63,10 @@ public class ArenaMatchListener implements Listener {
         Player player = event.getPlayer();
 
         if (player.hasMetadata("fakeplayer:arena_name")) {
+            event.setKeepInventory(true);
+            event.setKeepLevel(true);
+            event.getDrops().clear();
+            event.setDroppedExp(0);
             Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
                 try {
                     player.spigot().respawn();
