@@ -1,0 +1,196 @@
+name: cactusbot
+version: '0.3.19'
+main: io.github.hello09x.fakeplayer.core.Main
+api-version: '1.20'
+author: hello09x
+website: 'https://github.com/tanyaofei/minecraft-fakeplayer'
+depend:
+  - CommandAPI
+
+softdepend:
+  - OpenInv
+  - PlaceholderAPI
+  - SkinsRestorer
+
+permissions:
+  cactusbot.command.spawn:
+    description: 'Allow player to run /cb spawn'
+  cactusbot.command.spawn.name:
+    description: 'Allow player to run /cb spawn and specify a name'
+  cactusbot.command.spawn.location:
+    description: 'Allow player to run /cb spawn and specify a spawn location'
+  cactusbot.command.kill:
+    description: 'Allow player to run /cb kill'
+  cactusbot.command.list:
+    description: 'Allow player to run /cb list'
+  cactusbot.command.select:
+    description: 'Allow player to run /cb select'
+  cactusbot.command.selection:
+    description: 'Allow player to run /cb selection'
+  cactusbot.command.distance:
+    description: 'Allow player to run /cb distance'
+  cactusbot.command.drop:
+    description: 'Allow player to run /cb drop'
+  cactusbot.command.dropstack:
+    description: 'Allow player to run /cb dropstack'
+  cactusbot.command.dropinv:
+    description: 'Allow player to run /cb dropinv'
+  cactusbot.command.invsee:
+    description: 'Allow player to run /cb invsee'
+  cactusbot.command.status:
+    description: 'Allow player to run /cb status'
+  cactusbot.command.respawn:
+    description: 'Allow player to run /cb respawn'
+  cactusbot.command.expme:
+    description: 'Allow player to run /cb expme'
+  cactusbot.command.tp:
+    description: 'Allow player to run /cb tp'
+  cactusbot.command.tphere:
+    description: 'Allow player to run /cb tphere'
+  cactusbot.command.tps:
+    description: 'Allow player to run /cb tps'
+  cactusbot.command.config:
+    description: 'Allow player to run /cb config'
+  cactusbot.command.set:
+    description: 'Allow player to run /cb set'
+  cactusbot.command.attack:
+    description: 'Allow player to run /cb attack'
+  cactusbot.command.crit:
+    description: 'Allow player to run /cb crit'
+  cactusbot.command.mace:
+    description: 'Allow player to run /cb mace'
+  cactusbot.command.action:
+    description: 'Allow player to run /cb action'
+  cactusbot.command.record:
+    description: 'Allow player to run /record start|stop'
+  cactusbot.command.userec:
+    description: 'Allow player to run /cb userec'
+  cactusbot.command.place:
+    description: 'Allow player to run /cb place'
+  cactusbot.command.crystal:
+    description: 'Allow player to run /cb crystal'
+  cactusbot.command.glide:
+    description: 'Allow player to run /cb glide'
+  cactusbot.command.lava:
+    description: 'Allow player to run /cb lava'
+  cactusbot.command.bucket:
+    description: 'Allow player to run /cb bucket'
+  cactusbot.command.autototem:
+    description: 'Allow player to run /cb autototem'
+  cactusbot.command.mine:
+    description: 'Allow player to run /cb mine'
+  cactusbot.command.use:
+    description: 'Allow player to run /cb use'
+  cactusbot.command.jump:
+    description: 'Allow player to run /cb jump'
+  cactusbot.command.sneak:
+    description: 'Allow player to run /cb sneak'
+  cactusbot.command.sprint:
+    description: 'Allow player to run /cb sprint'
+  cactusbot.command.look:
+    description: 'Allow player to run /cb look'
+  cactusbot.command.turn:
+    description: 'Allow player to run /cb turn'
+  cactusbot.command.move:
+    description: 'Allow player to run /cb move'
+  cactusbot.command.ride:
+    description: 'Allow player to run /cb ride'
+  cactusbot.command.swap:
+    description: 'Allow player to run /cb swap'
+  cactusbot.command.sleep:
+    description: 'Allow player to run /cb sleep'
+  cactusbot.command.stop:
+    description: 'Allow player to run /cb stop'
+  cactusbot.command.wakeup:
+    description: 'Allow player to run /cb wakeup'
+  cactusbot.command.hold:
+    description: 'Allow player to run /cb hold'
+  cactusbot.command.cmd:
+    description: 'Allow player to run /cb cmd'
+  cactusbot.command.preset:
+    description: 'Allow player to manage /cb preset'
+  cactusbot.command.skin:
+    description: 'Allow player to run /cb skin (SkinsRestorer)'
+  cactusbot.command.arena:
+    description: 'Allow player to manage /cb arena'
+  cactusbot.config.replenish:
+    description: 'Allow player to configure cactus bots can replenish'
+  cactusbot.config.replenish.chest:
+    description: 'Allow player to configure cactus bots can replenish from nearby chest'
+  cactusbot.config.autofish:
+    description: 'Allow player to configure cactus bots to auto-fishing'
+
+  cactusbot.spawn:
+    description: 'Includes all basic permissions'
+    children:
+      - cactusbot.command.spawn
+      - cactusbot.command.kill
+      - cactusbot.command.list
+      - cactusbot.command.distance
+      - cactusbot.command.select
+      - cactusbot.command.selection
+      - cactusbot.command.drop
+      - cactusbot.command.dropstack
+      - cactusbot.command.dropinv
+      - cactusbot.command.skin
+      - cactusbot.command.invsee
+      - cactusbot.command.status
+      - cactusbot.command.respawn
+      - cactusbot.command.config
+      - cactusbot.command.set
+      - cactusbot.command.preset
+      - cactusbot.command.arena
+
+  cactusbot.tp:
+    description: 'Includes all permissions about teleport'
+    children:
+      - cactusbot.command.tp
+      - cactusbot.command.tphere
+      - cactusbot.command.tps
+
+  cactusbot.exp:
+    description: '所有关于经验值的命令权限'
+    children:
+      - cactusbot.command.expme
+
+  cactusbot.action:
+    description: 'Includes all permissions about controlling action'
+    children:
+      - cactusbot.command.attack
+      - cactusbot.command.crit
+      - cactusbot.command.mace
+      - cactusbot.command.action
+      - cactusbot.command.record
+      - cactusbot.command.userec
+      - cactusbot.command.place
+      - cactusbot.command.crystal
+      - cactusbot.command.glide
+      - cactusbot.command.lava
+      - cactusbot.command.bucket
+      - cactusbot.command.autototem
+      - cactusbot.command.mine
+      - cactusbot.command.use
+      - cactusbot.command.jump
+      - cactusbot.command.sneak
+      - cactusbot.command.sprint
+      - cactusbot.command.look
+      - cactusbot.command.turn
+      - cactusbot.command.move
+      - cactusbot.command.ride
+      - cactusbot.command.swap
+      - cactusbot.command.sleep
+      - cactusbot.command.wakeup
+      - cactusbot.command.hold
+      - cactusbot.command.stop
+      - cactusbot.config.replenish
+      - cactusbot.config.replenish.chest
+      - cactusbot.config.autofish
+
+  cactusbot.*:
+    description: 'Includes all permissions'
+    children:
+      - cactusbot.spawn
+      - cactusbot.tp
+      - cactusbot.exp
+      - cactusbot.action
+      - cactusbot.command.cmd

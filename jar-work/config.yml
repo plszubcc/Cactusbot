@@ -1,0 +1,453 @@
+version: 19
+
+i18n:
+  locale: en
+  message_prefix: '&7[&bCactusBot&7] '
+
+server-limit: 1000
+player-limit: 1
+detect-ip: true
+lifespan: 0
+name-template: ''
+name-prefix: ''
+name-pattern: '^[a-zA-Z0-9_]+$'
+name-style: gray, italic
+prevent-kicking: ON_SPAWNING
+follow-quiting: true
+drop-inventory-on-quiting: false
+persistent-data: true
+kick-on-dead: true
+kale-tps: 0
+post-spawn-commands:
+  - ''
+  - ''
+after-spawn-commands:
+  - ''
+  - ''
+check-for-updates: true
+
+settings:
+  silent-commands: true
+
+messages:
+  win: "&aYou win!"
+  lose: "&cYou lose!"
+
+gui:
+  play:
+    title: "Bot PvP"
+
+bot-sounds:
+  enabled: true
+  master-volume: 1.0
+  spawn:
+    - sound: "BLOCK_PISTON_EXTEND"
+      volume: 1.0
+      pitch: 0.8
+      delay: 0
+    - sound: "BLOCK_CHAIN_PLACE"
+      volume: 0.9
+      pitch: 1.2
+      delay: 3
+    - sound: "BLOCK_NOTE_BLOCK_BIT"
+      volume: 0.8
+      pitch: 1.5
+      delay: 6
+  move:
+    interval: 8
+    min-distance: 0.18
+    steps:
+      - sound: "BLOCK_CHAIN_STEP"
+        volume: 0.7
+        pitch: 1.1
+        delay: 0
+      - sound: "BLOCK_PISTON_CONTRACT"
+        volume: 0.6
+        pitch: 0.9
+        delay: 0
+  hit:
+    - sound: "ENTITY_IRON_GOLEM_HURT"
+      volume: 0.8
+      pitch: 1.4
+      delay: 0
+    - sound: "BLOCK_ANVIL_PLACE"
+      volume: 0.5
+      pitch: 1.7
+      delay: 2
+  death:
+    - sound: "BLOCK_DISPENSER_FAIL"
+      volume: 1.0
+      pitch: 0.8
+      delay: 0
+    - sound: "ENTITY_BREEZE_DEATH"
+      volume: 0.9
+      pitch: 1.2
+      delay: 4
+
+# Presets
+# Applied with:
+#   /cb spawn <preset> <botname> [skinPlayer]
+#
+# commands:
+# - command: Console command to dispatch. Supports %player% (alias of %p), %u, %c.
+#   Also supports %target% for the current combat target.
+# - repeat: -1 = run once after spawn
+# - repeat: X  = repeat every X ticks
+# - delay: optional initial delay in ticks before first run
+# - stop: optional total lifetime in ticks for that repeating command
+# - if: optional conditions:
+#     self-health-min / self-health-max
+#     target-health-min / target-health-max
+#     target-distance-min / target-distance-max
+#
+# Premade presets:
+# - mace-ordinary: wind-charge launch into a mace hit
+# - mace-elytra: elytra-assisted mace launch
+#
+# Recommended hotbar for both:
+#   slot 5 = mace
+#   slot 7 = wind charge
+# For mace-elytra, save the preset inventory with Elytra already equipped in chestplate slot.
+presets:
+  mace-ordinary:
+    commands:
+      - command: "cb look target %target% %p"
+        repeat: 10
+      - command: "cb move forward %p"
+        repeat: 6
+      - command: "cb mace %p"
+        repeat: -1
+      - command: "cb sprint %p on"
+        repeat: 20
+        stop: 120
+      - command: "cb hold 7 %p"
+        repeat: 40
+      - command: "cb look down %p"
+        repeat: 40
+        if:
+          target-distance-max: 8.0
+      - command: "cb use once %p"
+        repeat: 40
+        delay: 1
+        if:
+          target-distance-max: 8.0
+      - command: "cb jump once %p"
+        repeat: 40
+        delay: 2
+        if:
+          target-distance-max: 8.0
+      - command: "cb hold 5 %p"
+        repeat: 40
+        delay: 8
+      - command: "cb attack once %p"
+        repeat: 30
+        delay: 8
+        if:
+          target-distance-max: 8.0
+    inventory: ""
+    reach: 3.0
+
+  mace-elytra:
+    commands:
+      - command: "cb move forward %p"
+        repeat: 6
+      - command: "cb mace %p"
+        repeat: -1
+      - command: "cb sprint %p on"
+        repeat: 20
+        stop: 120
+      - command: "cb hold 7 %p"
+        repeat: 50
+      - command: "cb turn back %p"
+        repeat: 50
+        if:
+          target-distance-max: 12.0
+      - command: "cb look down %p"
+        repeat: 50
+        delay: 1
+        if:
+          target-distance-max: 12.0
+      - command: "cb jump once %p"
+        repeat: 50
+        delay: 2
+        if:
+          target-distance-max: 12.0
+      - command: "cb glide %p"
+        repeat: 50
+        delay: 3
+        if:
+          target-distance-max: 12.0
+      - command: "cb use once %p"
+        repeat: 50
+        delay: 4
+        if:
+          target-distance-max: 12.0
+      - command: "cb look up %p"
+        repeat: 50
+        delay: 6
+      - command: "cb hold 5 %p"
+        repeat: 50
+        delay: 10
+      - command: "cb look target %target% %p"
+        repeat: 50
+        delay: 11
+      - command: "cb look target %target% %p"
+        repeat: 8
+        delay: 14
+      - command: "cb attack once %p"
+        repeat: 50
+        delay: 15
+        if:
+          target-distance-max: 4.5
+    inventory: ""
+    reach: 3.0
+
+  uhc:
+    commands:
+      - command: "cb mace %p off"
+        repeat: -1
+      - command: "cb sprint %p on"
+        repeat: 20
+      - command: "cb look target %target% %p"
+        repeat: 4
+      - command: "cb move forward %p"
+        repeat: 8
+      - command: "cb move left %p"
+        repeat: 16
+      - command: "cb move right %p"
+        repeat: 16
+        delay: 8
+      - command: "cb hold netherite_sword %p"
+        repeat: 20
+      - command: "cb attack once %p"
+        repeat: 12
+        delay: 1
+        if:
+          target-distance-max: 3.0
+      - command: "cb sprint %p off"
+        repeat: 26
+        delay: 8
+        if:
+          target-distance-max: 3.2
+      - command: "cb crit %p"
+        repeat: 26
+        delay: 9
+        if:
+          target-distance-max: 3.2
+      - command: "cb jump once %p"
+        repeat: 26
+        delay: 10
+        if:
+          target-distance-max: 3.2
+      - command: "cb attack once %p"
+        repeat: 26
+        delay: 12
+        if:
+          target-distance-max: 3.2
+      - command: "cb sprint %p on"
+        repeat: 26
+        delay: 15
+      - command: "cb hold golden_apple %p"
+        repeat: 40
+        if:
+          self-health-max: 12
+      - command: "cb use once %p"
+        repeat: 40
+        delay: 2
+        if:
+          self-health-max: 12
+      - command: "cb hold player_head %p"
+        repeat: 50
+        delay: 5
+        if:
+          self-health-max: 8
+      - command: "cb use once %p"
+        repeat: 50
+        delay: 7
+        if:
+          self-health-max: 8
+      - command: "cb hold water_bucket %p"
+        repeat: 20
+        if:
+          self-on-fire: true
+      - command: "cb look down %p"
+        repeat: 20
+        delay: 1
+        if:
+          self-on-fire: true
+      - command: "cb use once %p"
+        repeat: 20
+        delay: 2
+        if:
+          self-on-fire: true
+      - command: "cb hold bucket %p"
+        repeat: 20
+        delay: 4
+        if:
+          self-on-fire: true
+      - command: "cb bucket pickup %p 3.0"
+        repeat: 20
+        delay: 5
+        if:
+          self-on-fire: true
+      - command: "cb hold cobweb %p"
+        repeat: 28
+        delay: 14
+        if:
+          target-distance-max: 3.5
+      - command: "cb place %p 3.0 right"
+        repeat: 28
+        delay: 15
+        if:
+          target-distance-max: 3.5
+      - command: "cb hold lava_bucket %p"
+        repeat: 28
+        delay: 17
+        if:
+          target-in-cobweb: true
+      - command: "cb lava above %p 4.0"
+        repeat: 28
+        delay: 18
+        if:
+          target-in-cobweb: true
+      - command: "cb hold bucket %p"
+        repeat: 28
+        delay: 20
+        if:
+          target-in-cobweb: true
+      - command: "cb bucket pickup %p 3.0"
+        repeat: 28
+        delay: 21
+        if:
+          target-in-cobweb: true
+      - command: "cb hold shield %p"
+        repeat: 24
+        delay: 18
+        if:
+          target-distance-min: 3.0
+          target-holding-axe: false
+      - command: "cb use once %p"
+        repeat: 24
+        delay: 19
+        if:
+          target-distance-min: 3.0
+          target-holding-axe: false
+      - command: "cb hold netherite_sword %p"
+        repeat: 24
+        delay: 22
+        if:
+          target-holding-axe: true
+          target-distance-max: 3.5
+    inventory: ""
+    reach: 3.0
+
+actions:
+  crystal-fast:
+    commands:
+      - command: "cb hold netherite_sword %p"
+        repeat: 20
+        delay: 0
+        if:
+          target-distance-max: 3.0
+      - id: sprinthit
+        command: "cb attack once %p"
+        repeat: 20
+        delay: 1
+        if:
+          target-distance-max: 3.0
+      - command: "cb hold obsidian %p"
+        repeat: 20
+        delay: 16
+        if:
+          after-command: sprinthit
+          target-hit: true
+          target-hit-within: 10
+      - id: obs_place
+        command: "cb place %p 3.0"
+        repeat: 20
+        delay: 18
+        if:
+          after-command: sprinthit
+          target-hit: true
+          target-hit-within: 20
+      - command: "cb hold end_crystal %p"
+        repeat: 20
+        delay: 19
+        if:
+          after-command: obs_place
+          after-command-within: 10
+      - command: "cb crystal place %p 4.0"
+        repeat: 20
+        delay: 20
+        if:
+          after-command: obs_place
+          after-command-within: 10
+      - command: "cb crystal break %p 4.0"
+        repeat: 20
+        delay: 32
+        if:
+          after-command: obs_place
+          after-command-within: 20
+
+# PvP Gamemodes + Arenas + Queues
+#
+# gamemodes:
+#   sword:
+#     icon: DIAMOND_SWORD
+#     display-color: yellow
+#     arenas: [arena1, arena2]
+#
+# arenas:
+#   arena1:
+#     preset: sword
+#     bot: Bot1
+#     skin: SkinName
+#     player-inventory: ""   # set by: /cb arena playerinventory arena1 set
+#     rounds: 1
+#     spawn:
+#       player: world,0,100,0,0,0
+#       bot: world,5,100,0,180,0
+#     busy: false
+#
+# queues:
+#   sword: []
+gamemodes: {}
+arenas: {}
+queues: {}
+
+# Match Found UI
+# Colors: black,dark_blue,dark_green,dark_aqua,dark_red,dark_purple,gold,gray,dark_gray,blue,green,aqua,red,light_purple,yellow,white
+pvp:
+  lobby: ""
+  result-teleport-delay: 50
+  arcade-sounds:
+    enabled: true
+    master-volume: 1.0
+    match-found:
+      sound: "UI_TOAST_IN"
+      pitch: 1.1
+    countdown:
+      sound: "BLOCK_NOTE_BLOCK_PLING"
+      pitch: 1.2
+    fight:
+      sound: "ENTITY_PLAYER_LEVELUP"
+      pitch: 1.35
+    win:
+      sound: "UI_TOAST_CHALLENGE_COMPLETE"
+      pitch: 1.0
+    lose:
+      sound: "BLOCK_NOTE_BLOCK_BASS"
+      pitch: 0.8
+  match-found:
+    title: "Match Found!"
+    subtitle: "Starting in %d"
+    fight-text: "Fight!"
+    title-color: yellow
+    subtitle-color: yellow
+    countdown-color: yellow
+    sound: "ENTITY_PLAYER_LEVELUP"
+    sound-volume: 1.0
+    sound-pitch: 1.0
+    countdown-sound: "BLOCK_NOTE_BLOCK_PLING"
+    countdown-sound-volume: 1.0
+    countdown-sound-pitch: 1.0

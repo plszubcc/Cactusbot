@@ -1,0 +1,6 @@
+package com.google.inject.internal;
+
+interface DelayedInitialize {
+
+    void initialize(InjectorImpl injector, Errors errors) throws ErrorsException;
+}

@@ -1,0 +1,8 @@
+package com.google.inject.internal;
+
+import com.google.inject.spi.Dependency;
+
+interface InternalFactory<T> {
+
+    T get(InternalContext context, Dependency<?> dependency, boolean linked) throws InternalProvisionException;
+}

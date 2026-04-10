@@ -1,0 +1,31 @@
+package com.google.inject.binder;
+
+import com.google.inject.Key;
+import com.google.inject.Provider;
+import com.google.inject.TypeLiteral;
+import java.lang.reflect.Constructor;
+
+public interface LinkedBindingBuilder<T> extends ScopedBindingBuilder {
+
+    ScopedBindingBuilder to(Class<? extends T> implementation);
+
+    ScopedBindingBuilder to(TypeLiteral<? extends T> implementation);
+
+    ScopedBindingBuilder to(Key<? extends T> targetKey);
+
+    void toInstance(T instance);
+
+    ScopedBindingBuilder toProvider(Provider<? extends T> provider);
+
+    ScopedBindingBuilder toProvider(jakarta.inject.Provider<? extends T> provider);
+
+    ScopedBindingBuilder toProvider(Class<? extends jakarta.inject.Provider<? extends T>> providerType);
+
+    ScopedBindingBuilder toProvider(TypeLiteral<? extends jakarta.inject.Provider<? extends T>> providerType);
+
+    ScopedBindingBuilder toProvider(Key<? extends jakarta.inject.Provider<? extends T>> providerKey);
+
+    <S extends T> ScopedBindingBuilder toConstructor(Constructor<S> constructor);
+
+    <S extends T> ScopedBindingBuilder toConstructor(Constructor<S> constructor, TypeLiteral<? extends S> type);
+}
