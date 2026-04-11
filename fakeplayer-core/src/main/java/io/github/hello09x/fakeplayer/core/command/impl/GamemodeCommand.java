@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import dev.jorel.commandapi.executors.CommandArguments;
 import io.github.hello09x.fakeplayer.core.config.GamemodeDefinition;
+import io.github.hello09x.fakeplayer.core.manager.pvp.ArenaManager;
 import io.github.hello09x.fakeplayer.core.manager.pvp.GamemodeManager;
 import io.github.hello09x.fakeplayer.core.manager.pvp.QueueManager;
 import java.util.ArrayList;
@@ -23,6 +24,8 @@ public class GamemodeCommand extends AbstractCommand {
     private GamemodeManager gamemodes;
     @Inject
     private QueueManager queues;
+    @Inject
+    private ArenaManager arenas;
 
     public void create(@NotNull CommandSender sender, @NotNull CommandArguments args) {
         String name = ((String) args.get("name")).trim();
@@ -56,7 +59,7 @@ public class GamemodeCommand extends AbstractCommand {
 
     public void list(@NotNull CommandSender sender, @NotNull CommandArguments args) {
         ArrayList<String> lines = new ArrayList<>();
-        for (Map.Entry<String, GamemodeDefinition> entry : this.config.getGamemodes().entrySet()) {
+        for (Map.Entry<String, GamemodeDefinition> entry : this.gamemodes.all().entrySet()) {
             lines.add(entry.getKey() + " (" + entry.getValue().arenas().size() + " arenas)");
         }
         lines.sort(String.CASE_INSENSITIVE_ORDER);
@@ -76,7 +79,7 @@ public class GamemodeCommand extends AbstractCommand {
         }
 
         String name = ((String) args.get("name")).trim();
-        GamemodeDefinition definition = this.config.getGamemodes().get(name);
+        GamemodeDefinition definition = this.gamemodes.get(name);
         if (definition == null) {
             sender.sendMessage(Component.text("Gamemode " + name + " was not found.", NamedTextColor.RED));
             return;
@@ -99,7 +102,7 @@ public class GamemodeCommand extends AbstractCommand {
     public void addarena(@NotNull CommandSender sender, @NotNull CommandArguments args) {
         String name = ((String) args.get("name")).trim();
         String arena = ((String) args.get("arena")).trim();
-        if (!this.config.getPvpArenas().containsKey(arena)) {
+        if (this.arenas.get(arena) == null) {
             sender.sendMessage(Component.text("Arena " + arena + " was not found.", NamedTextColor.RED));
             return;
         }
@@ -154,7 +157,7 @@ public class GamemodeCommand extends AbstractCommand {
         }
 
         String name = ((String) args.get("name")).trim();
-        if (!this.config.getGamemodes().containsKey(name)) {
+        if (this.gamemodes.get(name) == null) {
             sender.sendMessage(Component.text("Gamemode " + name + " was not found.", NamedTextColor.RED));
             return;
         }

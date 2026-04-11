@@ -3,7 +3,6 @@ package io.github.hello09x.fakeplayer.core.manager.pvp;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.hello09x.fakeplayer.core.Main;
-import io.github.hello09x.fakeplayer.core.config.FakeplayerConfig;
 import io.github.hello09x.fakeplayer.core.config.GamemodeDefinition;
 import java.io.File;
 import java.util.ArrayDeque;
@@ -28,21 +27,21 @@ import org.jetbrains.annotations.Nullable;
 @Singleton
 public class QueueManager {
 
-    private final FakeplayerConfig config;
+    private final GamemodeManager gamemodes;
     private final ArenaManager arenaManager;
     private final Map<String, Deque<UUID>> queues = new ConcurrentHashMap();
     private BukkitTask ticker;
 
     @Inject
-    public QueueManager(FakeplayerConfig config, ArenaManager arenaManager) {
-        this.config = config;
+    public QueueManager(GamemodeManager gamemodes, ArenaManager arenaManager) {
+        this.gamemodes = gamemodes;
         this.arenaManager = arenaManager;
         this.loadFromConfig();
         this.startTicker();
     }
 
     public QueueJoinResult queue(@NotNull Player player, @NotNull String gamemode) {
-        GamemodeDefinition definition = this.config.getGamemodes().get(gamemode);
+        GamemodeDefinition definition = this.gamemodes.get(gamemode);
         if (definition == null) {
             return QueueJoinResult.INVALID_GAMEMODE;
         }
@@ -64,7 +63,6 @@ public class QueueManager {
             return QueueJoinResult.NO_ARENAS_CONFIGURED;
         }
 
-        boolean hadFreeArena = this.arenaManager.findFreeArena(definition.arenas()) != null;
         Deque<UUID> queue = this.queues.computeIfAbsent(gamemode, key -> new ArrayDeque<>());
         queue.addLast(player.getUniqueId());
         this.persistQueue(gamemode);
@@ -133,7 +131,7 @@ public class QueueManager {
         this.ticker = new BukkitRunnable() {
             @Override
             public void run() {
-                for (String gamemode : QueueManager.this.config.getGamemodes().keySet()) {
+                for (String gamemode : QueueManager.this.gamemodes.all().keySet()) {
                     QueueManager.this.tickGamemode(gamemode);
                 }
             }
@@ -141,7 +139,7 @@ public class QueueManager {
     }
 
     private void tickGamemode(@NotNull String gamemode) {
-        GamemodeDefinition definition = this.config.getGamemodes().get(gamemode);
+        GamemodeDefinition definition = this.gamemodes.get(gamemode);
         if (definition == null) {
             return;
         }
@@ -186,7 +184,7 @@ public class QueueManager {
         }
 
         for (String arena : definition.arenas()) {
-            if (this.config.getPvpArenas().containsKey(arena)) {
+            if (this.arenaManager.get(arena) != null) {
                 return true;
             }
         }

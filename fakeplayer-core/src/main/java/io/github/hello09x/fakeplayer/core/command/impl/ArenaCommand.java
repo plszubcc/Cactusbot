@@ -64,7 +64,7 @@ public class ArenaCommand extends AbstractCommand {
     }
 
     public void list(@NotNull CommandSender sender, @NotNull CommandArguments args) {
-        List<String> names = this.config.getPvpArenas().keySet().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
+        List<String> names = this.arenas.listArenaNames();
 
         if (names.isEmpty()) {
             sender.sendMessage(MessageUtils.translatableWithPrefix("fakeplayer.command.arena.list.empty").color(NamedTextColor.RED));
