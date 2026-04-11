@@ -627,11 +627,11 @@ public class FakeplayerConfig extends PluginConfig {
         }
 
         Map<Object, Object> nested = map1;
-        Double selfHealthMin = this.readDouble(map, nested, "self-health-min");
-        Double selfHealthMax = this.readDouble(map, nested, "self-health-max");
+        Double selfHealthMin = this.readDouble(map, nested, "self-health-min", "bot-health-min", "self-hp-min", "bot-hp-min");
+        Double selfHealthMax = this.readDouble(map, nested, "self-health-max", "bot-health-max", "self-hp-max", "bot-hp-max");
         Boolean selfOnFire = this.readBoolean(map, nested, "self-on-fire");
-        Double targetHealthMin = this.readDouble(map, nested, "target-health-min");
-        Double targetHealthMax = this.readDouble(map, nested, "target-health-max");
+        Double targetHealthMin = this.readDouble(map, nested, "target-health-min", "target-hp-min");
+        Double targetHealthMax = this.readDouble(map, nested, "target-health-max", "target-hp-max");
         Double targetDistanceMin = this.readDouble(map, nested, "target-distance-min");
         Double targetDistanceMax = this.readDouble(map, nested, "target-distance-max");
         Boolean targetBlocking = this.readBoolean(map, nested, "target-blocking");
@@ -660,6 +660,17 @@ public class FakeplayerConfig extends PluginConfig {
                 return null;
             }
         }
+    }
+
+    private @Nullable Double readDouble(@NotNull Map<?, ?> root, @NotNull Map<?, ?> nested, @NotNull String... keys) {
+        for (String key : keys) {
+            Double value = this.readDouble(root, nested, key);
+            if (value != null) {
+                return value;
+            }
+        }
+
+        return null;
     }
 
     private @Nullable Integer readInteger(@NotNull Map<?, ?> root, @NotNull Map<?, ?> nested, @NotNull String key) {

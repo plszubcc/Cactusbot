@@ -17,12 +17,15 @@ import io.github.hello09x.fakeplayer.core.util.Attributes;
 import io.github.hello09x.fakeplayer.core.util.SkinRestorerCompat;
 import java.io.File;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -50,19 +53,29 @@ public class ArenaManager {
     private final FakeplayerManager fakeplayerManager;
     private final ActionManager actionManager;
     private final ArenaRegenManager regenManager;
+    private final GamemodeManager gamemodeManager;
+    private final Map<String, PvpArenaDefinition> arenas = new ConcurrentHashMap();
+    private final Set<String> busyArenas = ConcurrentHashMap.newKeySet();
+    private final Object fileLock = new Object();
     private final Map<String, ArenaManager.ActiveMatch> active = new ConcurrentHashMap();
+    private volatile ArenaSpawn pvpLobby;
 
     @Inject
-    public ArenaManager(FakeplayerConfig fakeplayerconfig, FakeplayerManager fakeplayermanager, ActionManager actionmanager, ArenaRegenManager arenaRegenManager) {
+    public ArenaManager(FakeplayerConfig fakeplayerconfig, FakeplayerManager fakeplayermanager, ActionManager actionmanager, ArenaRegenManager arenaRegenManager, GamemodeManager gamemodeManager) {
         super();
         this.config = fakeplayerconfig;
         this.fakeplayerManager = fakeplayermanager;
         this.actionManager = actionmanager;
         this.regenManager = arenaRegenManager;
+        this.gamemodeManager = gamemodeManager;
+        this.pvpLobby = fakeplayerconfig.getPvpLobby();
+        for (Map.Entry<String, PvpArenaDefinition> entry : fakeplayerconfig.getPvpArenas().entrySet()) {
+            this.arenas.put(entry.getKey(), this.withBusy(entry.getValue(), false));
+        }
     }
 
     public @Nullable PvpArenaDefinition get(@NotNull String s) {
-        return (PvpArenaDefinition) this.config.getPvpArenas().get(s);
+        return this.arenas.get(s);
     }
 
     public @Nullable String getArenaOf(@NotNull Player player) {
@@ -94,16 +107,14 @@ public class ArenaManager {
     }
 
     public boolean isBusy(@NotNull String s) {
-        PvpArenaDefinition pvparenadefinition = (PvpArenaDefinition) this.config.getPvpArenas().get(s);
-
-        return pvparenadefinition != null && pvparenadefinition.busy();
+        return this.active.containsKey(s) || this.busyArenas.contains(s);
     }
 
     public @Nullable String findFreeArena(@NotNull List<String> list) {
         for (String s : list) {
-            PvpArenaDefinition pvparenadefinition = (PvpArenaDefinition) this.config.getPvpArenas().get(s);
+            PvpArenaDefinition pvparenadefinition = this.arenas.get(s);
 
-            if (pvparenadefinition != null && !pvparenadefinition.busy()) {
+            if (pvparenadefinition != null && !this.isBusy(s)) {
                 return s;
             }
         }
@@ -112,11 +123,11 @@ public class ArenaManager {
     }
 
     public boolean startMatch(@NotNull Player player, @NotNull String s) {
-        PvpArenaDefinition pvparenadefinition = (PvpArenaDefinition) this.config.getPvpArenas().get(s);
+        PvpArenaDefinition pvparenadefinition = this.arenas.get(s);
 
         if (pvparenadefinition == null) {
             return false;
-        } else if (pvparenadefinition.busy()) {
+        } else if (this.isBusy(s)) {
             return false;
         } else if (this.active.containsKey(s)) {
             return false;
@@ -203,7 +214,7 @@ public class ArenaManager {
 
         if (s != null) {
             ArenaManager.ActiveMatch arenamanager_activematch = (ArenaManager.ActiveMatch) this.active.get(s);
-            PvpArenaDefinition pvparenadefinition = (PvpArenaDefinition) this.config.getPvpArenas().get(s);
+            PvpArenaDefinition pvparenadefinition = this.arenas.get(s);
 
             if (arenamanager_activematch != null && pvparenadefinition != null && !arenamanager_activematch.resolvingRound) {
                 arenamanager_activematch.resolvingRound = true;
@@ -231,6 +242,11 @@ public class ArenaManager {
                 if (player1 != null && player1.isOnline()) {
                     if (arenamanager_activematch.playerRoundsWon < arenamanager_activematch.roundsToWin && arenamanager_activematch.botRoundsWon < arenamanager_activematch.roundsToWin) {
                         this.showRoundScore(player1, arenamanager_activematch.playerRoundsWon, arenamanager_activematch.botRoundsWon);
+                        Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
+                            this.resetPlayerState(player1);
+                            player1.teleport(pvparenadefinition.playerSpawn().toLocation());
+                            this.applyPresetToPlayer(player1, arenamanager_activematch.playerSnapshot);
+                        });
                         Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
                             Player player2 = arenamanager_activematch.botId == null ? null : Bukkit.getPlayer(arenamanager_activematch.botId);
 
@@ -289,64 +305,53 @@ public class ArenaManager {
     }
 
     private void setBusy(@NotNull String s, boolean flag) {
-        File file = this.getConfigFile();
-        YamlConfiguration yamlconfiguration = YamlConfiguration.loadConfiguration(file);
-
-        yamlconfiguration.set("arenas." + s + ".busy", flag);
-
-        try {
-            yamlconfiguration.save(file);
-        } catch (Exception exception) {
-            ;
+        if (flag) {
+            this.busyArenas.add(s);
+        } else {
+            this.busyArenas.remove(s);
         }
 
-        this.config.reload();
+        PvpArenaDefinition current = this.arenas.get(s);
+        if (current != null) {
+            this.arenas.put(s, this.withBusy(current, flag));
+        }
+
+        this.saveConfigAsync(yamlconfiguration -> yamlconfiguration.set("arenas." + s + ".busy", flag));
     }
 
     public void writeSpawn(@NotNull String s, @NotNull String s1, @NotNull ArenaSpawn arenaspawn) throws Exception {
-        File file = this.getConfigFile();
-        YamlConfiguration yamlconfiguration = YamlConfiguration.loadConfiguration(file);
+        PvpArenaDefinition current = this.requireArena(s);
+        PvpArenaDefinition updated = "player".equalsIgnoreCase(s1) ? new PvpArenaDefinition(current.name(), current.preset(), current.botName(), current.botSkin(), current.playerInventoryBase64(), current.rounds(), arenaspawn, current.botSpawn(), current.busy()) : new PvpArenaDefinition(current.name(), current.preset(), current.botName(), current.botSkin(), current.playerInventoryBase64(), current.rounds(), current.playerSpawn(), arenaspawn, current.busy());
 
-        yamlconfiguration.set("arenas." + s + ".spawn." + s1, this.toCsv(arenaspawn));
-        yamlconfiguration.save(file);
-        this.config.reload();
+        this.arenas.put(s, updated);
+        this.saveConfigAsync(yamlconfiguration -> yamlconfiguration.set("arenas." + s + ".spawn." + s1, this.toCsv(arenaspawn)));
     }
 
     public void writePreset(@NotNull String s, @NotNull String s1) throws Exception {
-        File file = this.getConfigFile();
-        YamlConfiguration yamlconfiguration = YamlConfiguration.loadConfiguration(file);
-
-        yamlconfiguration.set("arenas." + s + ".preset", s1);
-        yamlconfiguration.save(file);
-        this.config.reload();
+        PvpArenaDefinition current = this.requireArena(s);
+        this.arenas.put(s, new PvpArenaDefinition(current.name(), s1, current.botName(), current.botSkin(), current.playerInventoryBase64(), current.rounds(), current.playerSpawn(), current.botSpawn(), current.busy()));
+        this.saveConfigAsync(yamlconfiguration -> yamlconfiguration.set("arenas." + s + ".preset", s1));
     }
 
     public void writeBot(@NotNull String s, @NotNull String s1, @Nullable String s2) throws Exception {
-        File file = this.getConfigFile();
-        YamlConfiguration yamlconfiguration = YamlConfiguration.loadConfiguration(file);
-
-        yamlconfiguration.set("arenas." + s + ".bot", s1);
-        yamlconfiguration.set("arenas." + s + ".skin", s2 == null ? "" : s2);
-        yamlconfiguration.save(file);
-        this.config.reload();
+        PvpArenaDefinition current = this.requireArena(s);
+        this.arenas.put(s, new PvpArenaDefinition(current.name(), current.preset(), s1, s2, current.playerInventoryBase64(), current.rounds(), current.playerSpawn(), current.botSpawn(), current.busy()));
+        this.saveConfigAsync(yamlconfiguration -> {
+            yamlconfiguration.set("arenas." + s + ".bot", s1);
+            yamlconfiguration.set("arenas." + s + ".skin", s2 == null ? "" : s2);
+        });
     }
 
     public void writeRounds(@NotNull String s, int i) throws Exception {
-        File file = this.getConfigFile();
-        YamlConfiguration yamlconfiguration = YamlConfiguration.loadConfiguration(file);
-
-        yamlconfiguration.set("arenas." + s + ".rounds", Math.max(1, i));
-        yamlconfiguration.save(file);
-        this.config.reload();
+        int rounds = Math.max(1, i);
+        PvpArenaDefinition current = this.requireArena(s);
+        this.arenas.put(s, new PvpArenaDefinition(current.name(), current.preset(), current.botName(), current.botSkin(), current.playerInventoryBase64(), rounds, current.playerSpawn(), current.botSpawn(), current.busy()));
+        this.saveConfigAsync(yamlconfiguration -> yamlconfiguration.set("arenas." + s + ".rounds", rounds));
     }
 
     public void writeLobby(@NotNull ArenaSpawn arenaspawn) throws Exception {
-        File file = this.getConfigFile();
-        YamlConfiguration yamlconfiguration = YamlConfiguration.loadConfiguration(file);
-
-        yamlconfiguration.set("pvp.lobby", this.toCsv(arenaspawn));
-        yamlconfiguration.save(file);
-        this.config.reload();
+        this.pvpLobby = arenaspawn;
+        this.saveConfigAsync(yamlconfiguration -> yamlconfiguration.set("pvp.lobby", this.toCsv(arenaspawn)));
     }
 
     public void writePlayerInventory(@NotNull String s, @NotNull PresetInventorySnapshot presetinventorysnapshot) throws Exception {
@@ -355,52 +360,49 @@ public class ArenaManager {
         if (s1 == null) {
             throw new IllegalStateException("encode-failed");
         } else {
-            File file = this.getConfigFile();
-            YamlConfiguration yamlconfiguration = YamlConfiguration.loadConfiguration(file);
-
-            yamlconfiguration.set("arenas." + s + ".player-inventory", s1);
-            yamlconfiguration.save(file);
-            this.config.reload();
+            PvpArenaDefinition current = this.requireArena(s);
+            this.arenas.put(s, new PvpArenaDefinition(current.name(), current.preset(), current.botName(), current.botSkin(), s1, current.rounds(), current.playerSpawn(), current.botSpawn(), current.busy()));
+            this.saveConfigAsync(yamlconfiguration -> yamlconfiguration.set("arenas." + s + ".player-inventory", s1));
         }
     }
 
     public void createArena(@NotNull String s, @NotNull Location location) throws Exception {
-        File file = this.getConfigFile();
-        YamlConfiguration yamlconfiguration = YamlConfiguration.loadConfiguration(file);
-
-        if (yamlconfiguration.getConfigurationSection("arenas") == null) {
-            yamlconfiguration.createSection("arenas");
-        }
-
-        if (yamlconfiguration.getConfigurationSection("arenas." + s) != null) {
+        if (this.arenas.containsKey(s)) {
             throw new IllegalStateException("exists");
         } else {
             ArenaSpawn arenaspawn = ArenaSpawn.fromLocation(location);
+            PvpArenaDefinition created = new PvpArenaDefinition(s, "", "Bot1", "", "", 1, arenaspawn, arenaspawn, false);
 
-            yamlconfiguration.set("arenas." + s + ".preset", "");
-            yamlconfiguration.set("arenas." + s + ".bot", "Bot1");
-            yamlconfiguration.set("arenas." + s + ".skin", "");
-            yamlconfiguration.set("arenas." + s + ".player-inventory", "");
-            yamlconfiguration.set("arenas." + s + ".rounds", 1);
-            yamlconfiguration.set("arenas." + s + ".spawn.player", this.toCsv(arenaspawn));
-            yamlconfiguration.set("arenas." + s + ".spawn.bot", this.toCsv(arenaspawn));
-            yamlconfiguration.set("arenas." + s + ".busy", false);
-            yamlconfiguration.save(file);
-            this.config.reload();
+            this.arenas.put(s, created);
+            this.saveConfigAsync(yamlconfiguration -> {
+                if (yamlconfiguration.getConfigurationSection("arenas") == null) {
+                    yamlconfiguration.createSection("arenas");
+                }
+                yamlconfiguration.set("arenas." + s + ".preset", "");
+                yamlconfiguration.set("arenas." + s + ".bot", "Bot1");
+                yamlconfiguration.set("arenas." + s + ".skin", "");
+                yamlconfiguration.set("arenas." + s + ".player-inventory", "");
+                yamlconfiguration.set("arenas." + s + ".rounds", 1);
+                yamlconfiguration.set("arenas." + s + ".spawn.player", this.toCsv(arenaspawn));
+                yamlconfiguration.set("arenas." + s + ".spawn.bot", this.toCsv(arenaspawn));
+                yamlconfiguration.set("arenas." + s + ".busy", false);
+            });
         }
     }
 
     public void deleteArena(@NotNull String s) throws Exception {
-        File file = this.getConfigFile();
-        YamlConfiguration yamlconfiguration = YamlConfiguration.loadConfiguration(file);
-
-        if (!yamlconfiguration.isConfigurationSection("arenas." + s)) {
+        if (this.arenas.remove(s) == null) {
             throw new IllegalStateException("missing");
         } else {
-            yamlconfiguration.set("arenas." + s, (Object) null);
-            yamlconfiguration.save(file);
-            this.config.reload();
+            this.busyArenas.remove(s);
+            this.saveConfigAsync(yamlconfiguration -> yamlconfiguration.set("arenas." + s, (Object) null));
         }
+    }
+
+    public @NotNull List<String> listArenaNames() {
+        ArrayList<String> names = new ArrayList<>(this.arenas.keySet());
+        names.sort(String.CASE_INSENSITIVE_ORDER);
+        return List.copyOf(names);
     }
 
     private @NotNull String toCsv(@NotNull ArenaSpawn arenaspawn) {
@@ -416,6 +418,32 @@ public class ArenaManager {
         }
 
         return new File(file, "config.yml");
+    }
+
+    private @NotNull PvpArenaDefinition requireArena(@NotNull String name) {
+        PvpArenaDefinition arena = this.arenas.get(name);
+        if (arena == null) {
+            throw new IllegalStateException("missing");
+        }
+        return arena;
+    }
+
+    private @NotNull PvpArenaDefinition withBusy(@NotNull PvpArenaDefinition arena, boolean busy) {
+        return new PvpArenaDefinition(arena.name(), arena.preset(), arena.botName(), arena.botSkin(), arena.playerInventoryBase64(), arena.rounds(), arena.playerSpawn(), arena.botSpawn(), busy);
+    }
+
+    private void saveConfigAsync(@NotNull Consumer<YamlConfiguration> update) {
+        File file = this.getConfigFile();
+        Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+            synchronized (this.fileLock) {
+                YamlConfiguration yamlconfiguration = YamlConfiguration.loadConfiguration(file);
+                update.accept(yamlconfiguration);
+                try {
+                    yamlconfiguration.save(file);
+                } catch (Exception ignored) {
+                }
+            }
+        });
     }
 
     private void applySnapshot(@NotNull Player player, @NotNull PresetInventorySnapshot presetinventorysnapshot) {
@@ -555,11 +583,9 @@ public class ArenaManager {
     }
 
     private void sendMatchResult(@NotNull Player player, @NotNull String s, ArenaManager.@NotNull ActiveMatch arenamanager_activematch, ArenaManager.@NotNull MatchResult arenamanager_matchresult) {
-        PvpArenaDefinition pvparenadefinition = (PvpArenaDefinition) this.config.getPvpArenas().get(s);
+        PvpArenaDefinition pvparenadefinition = this.arenas.get(s);
         String s1 = pvparenadefinition == null ? "" : pvparenadefinition.botName();
-        String s2 = (String) this.config.getGamemodes().values().stream().filter((gamemodedefinition) -> {
-            return gamemodedefinition.arenas().contains(s);
-        }).map(GamemodeDefinition::name).findFirst().orElse("");
+        String s2 = (String) Optional.ofNullable(this.gamemodeManager.findByArena(s)).orElse("");
         HashMap hashmap = new HashMap();
 
         hashmap.put("%arena%", s);
@@ -623,7 +649,7 @@ public class ArenaManager {
     }
 
     private @NotNull Location getExitLocation(@NotNull Location location) {
-        ArenaSpawn arenaspawn = this.config.getPvpLobby();
+        ArenaSpawn arenaspawn = this.pvpLobby;
 
         if (arenaspawn == null) {
             return location;

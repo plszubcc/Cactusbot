@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -33,22 +34,24 @@ public class ArenaRegenManager {
 
     private static final int APPLY_BATCH_SIZE = 512;
     private final Map<String, Boolean> running = new ConcurrentHashMap();
+    private final Map<String, Location> firstCorners = new ConcurrentHashMap();
+    private final Map<String, Location> secondCorners = new ConcurrentHashMap();
+    private final Object fileLock = new Object();
 
     @Inject
     public ArenaRegenManager() {
+        this.loadCornersFromConfig();
     }
 
     public void setCorner(@NotNull String arena, int corner, @NotNull Location location) throws Exception {
-        File file = this.getConfigFile();
-        YamlConfiguration yml = YamlConfiguration.loadConfiguration(file);
-        if (!yml.isConfigurationSection("arenas." + arena)) {
-            throw new IllegalStateException("missing");
+        String key = corner == 1 ? "corner1" : "corner2";
+        if (corner == 1) {
+            this.firstCorners.put(arena, location.clone());
+        } else {
+            this.secondCorners.put(arena, location.clone());
         }
 
-        String key = corner == 1 ? "corner1" : "corner2";
-        yml.set("arenas." + arena + ".region." + key, this.toSimpleCsv(location));
-        yml.save(file);
-
+        this.saveConfigAsync(yml -> yml.set("arenas." + arena + ".region." + key, this.toSimpleCsv(location)));
         ArenaRegion region = this.loadRegion(arena);
         if (region != null) {
             this.captureSnapshot(arena, region);
@@ -129,15 +132,16 @@ public class ArenaRegenManager {
     }
 
     private @Nullable ArenaRegion loadRegion(@NotNull String arena) {
-        YamlConfiguration yml = YamlConfiguration.loadConfiguration(this.getConfigFile());
-        String corner1 = yml.getString("arenas." + arena + ".region.corner1");
-        String corner2 = yml.getString("arenas." + arena + ".region.corner2");
-        if (corner1 == null || corner2 == null || corner1.isBlank() || corner2.isBlank()) {
+        Location one = this.firstCorners.get(arena);
+        Location two = this.secondCorners.get(arena);
+        if (one == null || two == null) {
+            this.loadCornersFromConfig();
+            one = this.firstCorners.get(arena);
+            two = this.secondCorners.get(arena);
+        }
+        if (one == null || two == null) {
             return null;
         }
-
-        Location one = this.fromSimpleCsv(corner1);
-        Location two = this.fromSimpleCsv(corner2);
         if (one == null || two == null || one.getWorld() == null || two.getWorld() == null) {
             return null;
         }
@@ -271,6 +275,40 @@ public class ArenaRegenManager {
         }
 
         return new File(folder, "config.yml");
+    }
+
+    private void saveConfigAsync(@NotNull Consumer<YamlConfiguration> update) {
+        File file = this.getConfigFile();
+        Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+            synchronized (this.fileLock) {
+                YamlConfiguration yml = YamlConfiguration.loadConfiguration(file);
+                update.accept(yml);
+                try {
+                    yml.save(file);
+                } catch (Exception ignored) {
+                }
+            }
+        });
+    }
+
+    private void loadCornersFromConfig() {
+        YamlConfiguration yml = YamlConfiguration.loadConfiguration(this.getConfigFile());
+        if (yml.getConfigurationSection("arenas") == null) {
+            return;
+        }
+
+        for (String arena : yml.getConfigurationSection("arenas").getKeys(false)) {
+            String corner1 = yml.getString("arenas." + arena + ".region.corner1");
+            String corner2 = yml.getString("arenas." + arena + ".region.corner2");
+            Location one = corner1 == null ? null : this.fromSimpleCsv(corner1);
+            Location two = corner2 == null ? null : this.fromSimpleCsv(corner2);
+            if (one != null) {
+                this.firstCorners.put(arena, one);
+            }
+            if (two != null) {
+                this.secondCorners.put(arena, two);
+            }
+        }
     }
 
     private record ArenaRegion(@NotNull Location corner1, @NotNull Location corner2) {}

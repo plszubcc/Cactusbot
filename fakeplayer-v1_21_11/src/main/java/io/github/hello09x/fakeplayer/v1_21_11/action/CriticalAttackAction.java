@@ -36,6 +36,10 @@ public class CriticalAttackAction extends TraceAction {
     }
 
     public boolean attack(Entity target) {
+        if (!AirborneAttackSupport.canUseSpecialAttack(this.player)) {
+            return false;
+        }
+
         float oldFallDistance = (float) this.player.an;
         boolean oldOnGround = this.player.aV();
 
