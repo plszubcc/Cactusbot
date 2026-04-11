@@ -32,15 +32,16 @@ public class AttackAction extends TraceAction {
             boolean maceMode = bukkit.getMetadata("fakeplayer:mace_mode").stream().anyMatch((vx) -> {
                 return vx.getOwningPlugin() == Main.getInstance() && vx.asBoolean();
             });
+            boolean airborneSpecial = AirborneAttackSupport.canUseSpecialAttack(this.player);
 
-            if (maceMode) {
+            if (maceMode && airborneSpecial) {
                 return (new MaceAttackAction(this.player)).attack(entityHit.a());
             } else {
                 boolean forceCrit = bukkit.getMetadata("fakeplayer:force_crit").stream().anyMatch((vx) -> {
                     return vx.getOwningPlugin() == Main.getInstance() && vx.asBoolean();
                 });
 
-                if (forceCrit) {
+                if (forceCrit && airborneSpecial) {
                     bukkit.removeMetadata("fakeplayer:force_crit", Main.getInstance());
                     return this.criticalAttackAction.attack(entityHit.a());
                 } else {

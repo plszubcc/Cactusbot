@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import dev.jorel.commandapi.executors.CommandArguments;
 import io.github.hello09x.fakeplayer.core.config.ArenaSpawn;
 import io.github.hello09x.fakeplayer.core.manager.pvp.ArenaManager;
+import io.github.hello09x.fakeplayer.core.manager.pvp.ArenaRegenManager;
 import io.github.hello09x.fakeplayer.core.preset.PresetInventoryCodec;
 import java.util.List;
 import net.kyori.adventure.text.Component;
@@ -19,6 +20,8 @@ public class ArenaCommand extends AbstractCommand {
 
     @Inject
     private ArenaManager arenas;
+    @Inject
+    private ArenaRegenManager regen;
 
     public ArenaCommand() {
         super();
@@ -61,7 +64,7 @@ public class ArenaCommand extends AbstractCommand {
     }
 
     public void list(@NotNull CommandSender sender, @NotNull CommandArguments args) {
-        List<String> names = this.config.getPvpArenas().keySet().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
+        List<String> names = this.arenas.listArenaNames();
 
         if (names.isEmpty()) {
             sender.sendMessage(MessageUtils.translatableWithPrefix("fakeplayer.command.arena.list.empty").color(NamedTextColor.RED));
@@ -171,6 +174,43 @@ public class ArenaCommand extends AbstractCommand {
 
         } else {
             sender.sendMessage(MessageUtils.translatableWithPrefix("fakeplayer.command.arena.error.player-only").color(NamedTextColor.RED));
+        }
+    }
+
+    public void setcorner(@NotNull CommandSender sender, @NotNull CommandArguments args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Only players can use this command.", NamedTextColor.RED));
+            return;
+        }
+
+        String arena = ((String) args.get("arena")).trim();
+        String corner = ((String) args.get("corner")).trim().toLowerCase();
+        int index;
+
+        if (corner.equals("1") || corner.equals("first")) {
+            index = 1;
+        } else if (corner.equals("2") || corner.equals("second")) {
+            index = 2;
+        } else {
+            sender.sendMessage(Component.text("Corner must be 1/2 or first/second.", NamedTextColor.RED));
+            return;
+        }
+
+        try {
+            this.regen.setCorner(arena, index, player.getLocation());
+            sender.sendMessage(Component.text("Saved corner " + index + " for arena " + arena + ".", NamedTextColor.GRAY));
+        } catch (IllegalStateException exception) {
+            sender.sendMessage(Component.text("Arena " + arena + " was not found.", NamedTextColor.RED));
+        } catch (Exception exception) {
+            sender.sendMessage(Component.text("Could not save the arena corner.", NamedTextColor.RED));
+        }
+    }
+
+    public void regen(@NotNull CommandSender sender, @NotNull CommandArguments args) {
+        String arena = ((String) args.get("arena")).trim();
+        boolean started = this.regen.regenerateAsync(arena, () -> sender.sendMessage(Component.text("Arena " + arena + " regenerated.", NamedTextColor.GRAY)));
+        if (!started) {
+            sender.sendMessage(Component.text("Arena " + arena + " is already regenerating.", NamedTextColor.RED));
         }
     }
 }
