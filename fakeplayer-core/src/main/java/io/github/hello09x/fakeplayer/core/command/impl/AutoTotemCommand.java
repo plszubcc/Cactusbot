@@ -14,18 +14,21 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class AutoTotemCommand extends AbstractCommand {
+   @Inject
+   private AutoTotemManager autoTotemManager;
 
-    @Inject
-    private AutoTotemManager autoTotemManager;
+   public AutoTotemCommand() {
+   }
 
-    public AutoTotemCommand() {
-        super();
-    }
-
-    public void autototem(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
-        Player fake = this.getFakeplayer(sender, args);
-        boolean enabled = this.autoTotemManager.toggle(fake);
-
-        sender.sendMessage(MessageUtils.translatableWithPrefix(enabled ? "fakeplayer.command.autototem.success.enabled" : "fakeplayer.command.autototem.success.disabled", Component.text(fake.getName(), NamedTextColor.WHITE)).color(NamedTextColor.GRAY));
-    }
+   public void autototem(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
+      Player fake = this.getFakeplayer(sender, args);
+      boolean enabled = this.autoTotemManager.toggle(fake);
+      sender.sendMessage(
+         MessageUtils.translatableWithPrefix(
+               enabled ? "fakeplayer.command.autototem.success.enabled" : "fakeplayer.command.autototem.success.disabled",
+               Component.text(fake.getName(), NamedTextColor.WHITE)
+            )
+            .color(NamedTextColor.GRAY)
+      );
+   }
 }

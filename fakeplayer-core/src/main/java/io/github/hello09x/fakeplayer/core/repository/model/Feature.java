@@ -19,117 +19,176 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public enum Feature implements Translatable, Singletons {
+   collidable(
+      "fakeplayer.config.collidable",
+      List.of("cactusbot.command.config"),
+      List.of("true", "false"),
+      "true",
+      faker -> String.valueOf(faker.isCollidable()),
+      (faker, value) -> faker.setCollidable(Boolean.parseBoolean(value))
+   ),
+   invulnerable(
+      "fakeplayer.config.invulnerable",
+      List.of("cactusbot.command.config"),
+      List.of("true", "false"),
+      "false",
+      faker -> String.valueOf(faker.isInvulnerable()),
+      (faker, value) -> faker.setInvulnerable(Boolean.parseBoolean(value))
+   ),
+   wolverine(
+      "fakeplayer.config.wolverine",
+      List.of("cactusbot.command.config"),
+      List.of("true", "false"),
+      "false",
+      fake -> String.valueOf(Optional.ofNullable(fake.getPotionEffect(PotionEffectType.REGENERATION)).<Boolean>map(PotionEffect::isInfinite).orElse(false)),
+      (faker, value) -> {
+         if (Boolean.parseBoolean(value)) {
+            faker.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, -1, 4, true, true));
+         } else {
+            faker.removePotionEffect(PotionEffectType.REGENERATION);
+         }
+      }
+   ),
+   look_at_entity(
+      "fakeplayer.config.look_at_entity",
+      List.of("cactusbot.command.config", "cactusbot.command.look"),
+      List.of("true", "false"),
+      "false",
+      faker -> String.valueOf(((ActionManager)actionManager.get()).hasActiveAction(faker, ActionType.LOOK_AT_NEAREST_ENTITY)),
+      (faker, value) -> {
+         if (Boolean.parseBoolean(value)) {
+            ((ActionManager)actionManager.get()).setAction(faker, ActionType.LOOK_AT_NEAREST_ENTITY, ActionSetting.continuous());
+         } else {
+            ((ActionManager)actionManager.get()).setAction(faker, ActionType.LOOK_AT_NEAREST_ENTITY, ActionSetting.stop());
+         }
+      }
+   ),
+   pickup_items(
+      "fakeplayer.config.pickup_items",
+      List.of("cactusbot.command.config"),
+      List.of("true", "false"),
+      "true",
+      faker -> String.valueOf(faker.getCanPickupItems()),
+      (faker, value) -> faker.setCanPickupItems(Boolean.parseBoolean(value))
+   ),
+   skin("fakeplayer.config.skin", List.of("cactusbot.command.config"), List.of("true", "false"), "true", null, null),
+   replenish(
+      "fakeplayer.config.replenish",
+      List.of("cactusbot.command.config", "cactusbot.config.replenish"),
+      List.of("true", "false"),
+      "false",
+      faker -> String.valueOf(((FakeplayerReplenishManager)replenishManager.get()).isReplenish(faker)),
+      (faker, value) -> ((FakeplayerReplenishManager)replenishManager.get()).setReplenish(faker, Boolean.parseBoolean(value))
+   ),
+   autofish(
+      "fakeplayer.config.autofish",
+      List.of("cactusbot.command.config", "cactusbot.config.autofish"),
+      List.of("true", "false"),
+      "false",
+      faker -> String.valueOf(((FakeplayerAutofishManager)autofishManager.get()).isAutofish(faker)),
+      (faker, value) -> ((FakeplayerAutofishManager)autofishManager.get()).setAutofish(faker, Boolean.parseBoolean(value))
+   );
 
-    collidable("fakeplayer.config.collidable", List.of("cactusbot.command.config"), List.of("true", "false"), "true", (fakerx) -> {
-        return String.valueOf(fakerx.isCollidable());
-    }, (fakerx, valuex) -> {
-        fakerx.setCollidable(Boolean.parseBoolean(valuex));
-    }), invulnerable("fakeplayer.config.invulnerable", List.of("cactusbot.command.config"), List.of("true", "false"), "false", (fakerx) -> {
-        return String.valueOf(fakerx.isInvulnerable());
-    }, (fakerx, valuex) -> {
-        fakerx.setInvulnerable(Boolean.parseBoolean(valuex));
-    }), wolverine("fakeplayer.config.wolverine", List.of("cactusbot.command.config"), List.of("true", "false"), "false", (fakex) -> {
-        return String.valueOf(Optional.ofNullable(fakex.getPotionEffect(PotionEffectType.REGENERATION)).map(PotionEffect::isInfinite).orElse(false));
-    }, (fakerx, valuex) -> {
-        if (Boolean.parseBoolean(valuex)) {
-            fakerx.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, -1, 4, true, true));
-        } else {
-            fakerx.removePotionEffect(PotionEffectType.REGENERATION);
-        }
+   @NotNull
+   final String translationKey;
+   @NotNull
+   final List<String> permissions;
+   @NotNull
+   final List<String> options;
+   @NotNull
+   final String defaultOption;
+   @Nullable
+   final Function<Player, String> detector;
+   @Nullable
+   final BiConsumer<Player, String> modifier;
 
-    }), look_at_entity("fakeplayer.config.look_at_entity", List.of("cactusbot.command.config", "cactusbot.command.look"), List.of("true", "false"), "false", (fakerx) -> {
-        return String.valueOf(((ActionManager) Feature.actionManager.get()).hasActiveAction(fakerx, ActionType.LOOK_AT_NEAREST_ENTITY));
-    }, (fakerx, valuex) -> {
-        if (Boolean.parseBoolean(valuex)) {
-            ((ActionManager) Feature.actionManager.get()).setAction(fakerx, ActionType.LOOK_AT_NEAREST_ENTITY, ActionSetting.continuous());
-        } else {
-            ((ActionManager) Feature.actionManager.get()).setAction(fakerx, ActionType.LOOK_AT_NEAREST_ENTITY, ActionSetting.stop());
-        }
+   @NotNull
+   public String translationKey() {
+      return this.translationKey;
+   }
 
-    }), pickup_items("fakeplayer.config.pickup_items", List.of("cactusbot.command.config"), List.of("true", "false"), "true", (fakerx) -> {
-        return String.valueOf(fakerx.getCanPickupItems());
-    }, (fakerx, valuex) -> {
-        fakerx.setCanPickupItems(Boolean.parseBoolean(valuex));
-    }), skin("fakeplayer.config.skin", List.of("cactusbot.command.config"), List.of("true", "false"), "true", (Function) null, (BiConsumer) null), replenish("fakeplayer.config.replenish", List.of("cactusbot.command.config", "cactusbot.config.replenish"), List.of("true", "false"), "false", (fakerx) -> {
-        return String.valueOf(((FakeplayerReplenishManager) Feature.replenishManager.get()).isReplenish(fakerx));
-    }, (fakerx, valuex) -> {
-        ((FakeplayerReplenishManager) Feature.replenishManager.get()).setReplenish(fakerx, Boolean.parseBoolean(valuex));
-    }), autofish("fakeplayer.config.autofish", List.of("cactusbot.command.config", "cactusbot.config.autofish"), List.of("true", "false"), "false", (fakerx) -> {
-        return String.valueOf(((FakeplayerAutofishManager) Feature.autofishManager.get()).isAutofish(fakerx));
-    }, (fakerx, valuex) -> {
-        ((FakeplayerAutofishManager) Feature.autofishManager.get()).setAutofish(fakerx, Boolean.parseBoolean(valuex));
-    });
+   public boolean hasDetector() {
+      return this.detector != null;
+   }
 
-    final @NotNull String translationKey;
-    final @NotNull List<String> permissions;
-    final @NotNull List<String> options;
-    final @NotNull String defaultOption;
-    final @Nullable Function<Player, String> detector;
-    final @Nullable BiConsumer<Player, String> modifier;
+   public boolean hasModifier() {
+      return this.modifier != null;
+   }
 
-    public @NotNull String translationKey() {
-        return this.translationKey;
-    }
-
-    public boolean hasDetector() {
-        return this.detector != null;
-    }
-
-    public boolean hasModifier() {
-        return this.modifier != null;
-    }
-
-    public boolean testPermissions(@NotNull CommandSender sender) {
-        if (this.permissions.isEmpty()) {
-            return true;
-        } else {
-            for (String permission : this.permissions) {
-                if (!sender.hasPermission(permission)) {
-                    return false;
-                }
+   public boolean testPermissions(@NotNull CommandSender sender) {
+      if (this.permissions.isEmpty()) {
+         return true;
+      } else {
+         for (String permission : this.permissions) {
+            if (!sender.hasPermission(permission)) {
+               return false;
             }
+         }
 
-            return true;
-        }
-    }
+         return true;
+      }
+   }
 
-    @Generated
-    public @NotNull String getTranslationKey() {
-        return this.translationKey;
-    }
+   @NotNull
+   @Generated
+   public String getTranslationKey() {
+      return this.translationKey;
+   }
 
-    @Generated
-    public @NotNull List<String> getPermissions() {
-        return this.permissions;
-    }
+   @NotNull
+   @Generated
+   public List<String> getPermissions() {
+      return this.permissions;
+   }
 
-    @Generated
-    public @NotNull List<String> getOptions() {
-        return this.options;
-    }
+   @NotNull
+   @Generated
+   public List<String> getOptions() {
+      return this.options;
+   }
 
-    @Generated
-    public @NotNull String getDefaultOption() {
-        return this.defaultOption;
-    }
+   @NotNull
+   @Generated
+   public String getDefaultOption() {
+      return this.defaultOption;
+   }
 
-    @Generated
-    public @Nullable Function<Player, String> getDetector() {
-        return this.detector;
-    }
+   @Nullable
+   @Generated
+   public Function<Player, String> getDetector() {
+      return this.detector;
+   }
 
-    @Generated
-    public @Nullable BiConsumer<Player, String> getModifier() {
-        return this.modifier;
-    }
+   @Nullable
+   @Generated
+   public BiConsumer<Player, String> getModifier() {
+      return this.modifier;
+   }
 
-    @Generated
-    private Feature(@NotNull String translationKey, @NotNull List<String> permissions, @Nullable List<String> options, @Nullable String defaultOption, Function<Player, String> detector, BiConsumer<Player, String> modifier) {
-        this.translationKey = translationKey;
-        this.permissions = permissions;
-        this.options = options;
-        this.defaultOption = defaultOption;
-        this.detector = detector;
-        this.modifier = modifier;
-    }
+   @Generated
+   private Feature(
+      @NotNull final String translationKey,
+      @NotNull final List<String> permissions,
+      @NotNull final List<String> options,
+      @NotNull final String defaultOption,
+      @Nullable final Function<Player, String> detector,
+      @Nullable final BiConsumer<Player, String> modifier
+   ) {
+      if (translationKey == null) {
+         throw new NullPointerException("translationKey is marked non-null but is null");
+      } else if (permissions == null) {
+         throw new NullPointerException("permissions is marked non-null but is null");
+      } else if (options == null) {
+         throw new NullPointerException("options is marked non-null but is null");
+      } else if (defaultOption == null) {
+         throw new NullPointerException("defaultOption is marked non-null but is null");
+      } else {
+         this.translationKey = translationKey;
+         this.permissions = permissions;
+         this.options = options;
+         this.defaultOption = defaultOption;
+         this.detector = detector;
+         this.modifier = modifier;
+      }
+   }
 }

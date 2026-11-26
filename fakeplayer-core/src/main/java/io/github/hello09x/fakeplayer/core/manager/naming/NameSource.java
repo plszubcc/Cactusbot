@@ -4,49 +4,46 @@ import java.util.Collections;
 import java.util.LinkedList;
 
 public class NameSource {
+   private final LinkedList<Integer> names;
+   private int capacity;
 
-    private final LinkedList<Integer> names;
-    private int capacity;
+   public NameSource(int initializeCapacity) {
+      this.capacity = initializeCapacity;
+      this.names = new LinkedList<>();
 
-    public NameSource(int initializeCapacity) {
-        super();
-        this.capacity = initializeCapacity;
-        this.names = new LinkedList();
+      for (int i = 0; i < initializeCapacity; i++) {
+         this.names.add(i);
+      }
+   }
 
-        for (int i = 0; i < initializeCapacity; ++i) {
+   public NameSource() {
+      this(0);
+   }
+
+   public int pop() {
+      if (this.names.isEmpty()) {
+         int newCapacity = this.capacity * 2;
+
+         for (int i = this.capacity; i < newCapacity; i++) {
             this.names.add(i);
-        }
+         }
 
-    }
+         this.capacity = newCapacity;
+      }
 
-    public NameSource() {
-        this(0);
-    }
+      return this.names.pop();
+   }
 
-    public int pop() {
-        if (this.names.isEmpty()) {
-            int newCapacity = this.capacity * 2;
+   public void push(int i) {
+      if (i < this.capacity) {
+         if (!this.names.contains(i)) {
+            this.names.push(i);
+            this.sort();
+         }
+      }
+   }
 
-            for (int i = this.capacity; i < newCapacity; ++i) {
-                this.names.add(i);
-            }
-
-            this.capacity = newCapacity;
-        }
-
-        return (Integer) this.names.pop();
-    }
-
-    public void push(int i) {
-        if (i < this.capacity) {
-            if (!this.names.contains(i)) {
-                this.names.push(i);
-                this.sort();
-            }
-        }
-    }
-
-    public void sort() {
-        Collections.sort(this.names);
-    }
+   public void sort() {
+      Collections.sort(this.names);
+   }
 }

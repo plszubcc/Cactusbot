@@ -8,14 +8,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class UserConfigRowMapper implements RowMapper<UserConfig> {
+   public static final UserConfigRowMapper instance = new UserConfigRowMapper();
 
-    public static final UserConfigRowMapper instance = new UserConfigRowMapper();
+   public UserConfigRowMapper() {
+   }
 
-    public UserConfigRowMapper() {
-        super();
-    }
-
-    public @Nullable UserConfig mapRow(@NotNull ResultSet rs, int rowNum) throws SQLException {
-        return new UserConfig(rs.getInt("id"), UUID.fromString(rs.getString("player_id")), Feature.valueOf(rs.getString("key")), rs.getString("value"));
-    }
+   @Nullable
+   public UserConfig mapRow(@NotNull ResultSet rs, int rowNum) throws SQLException {
+      return new UserConfig(rs.getInt("id"), UUID.fromString(rs.getString("player_id")), Feature.valueOf(rs.getString("key")), rs.getString("value"));
+   }
 }

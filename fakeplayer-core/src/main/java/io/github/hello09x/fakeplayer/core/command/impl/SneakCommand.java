@@ -12,22 +12,24 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class SneakCommand extends AbstractCommand {
+   public SneakCommand() {
+   }
 
-    public SneakCommand() {
-        super();
-    }
+   public void sneak(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
+      Player fake = this.getFakeplayer(sender, args);
+      fake.setSneaking(true);
+      sender.sendMessage(
+         MessageUtils.translatableWithPrefix("fakeplayer.command.sneak.success.enabled", Component.text(fake.getName(), NamedTextColor.WHITE))
+            .color(NamedTextColor.GRAY)
+      );
+   }
 
-    public void sneak(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
-        Player fake = this.getFakeplayer(sender, args);
-
-        fake.setSneaking(true);
-        sender.sendMessage(MessageUtils.translatableWithPrefix("fakeplayer.command.sneak.success.enabled", Component.text(fake.getName(), NamedTextColor.WHITE)).color(NamedTextColor.GRAY));
-    }
-
-    public void unsneak(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
-        Player fake = this.getFakeplayer(sender, args);
-
-        fake.setSneaking(false);
-        sender.sendMessage(MessageUtils.translatableWithPrefix("fakeplayer.command.sneak.success.disabled", Component.text(fake.getName(), NamedTextColor.WHITE)).color(NamedTextColor.GRAY));
-    }
+   public void unsneak(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
+      Player fake = this.getFakeplayer(sender, args);
+      fake.setSneaking(false);
+      sender.sendMessage(
+         MessageUtils.translatableWithPrefix("fakeplayer.command.sneak.success.disabled", Component.text(fake.getName(), NamedTextColor.WHITE))
+            .color(NamedTextColor.GRAY)
+      );
+   }
 }

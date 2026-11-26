@@ -15,26 +15,22 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class DebugCommand {
+   private final FakeplayerManager manager;
+   private final NMSBridge bridge;
 
-    private final FakeplayerManager manager;
-    private final NMSBridge bridge;
+   @Inject
+   public DebugCommand(FakeplayerManager manager, NMSBridge bridge) {
+      this.manager = manager;
+      this.bridge = bridge;
+   }
 
-    @Inject
-    public DebugCommand(FakeplayerManager manager, NMSBridge bridge) {
-        super();
-        this.manager = manager;
-        this.bridge = bridge;
-    }
-
-    public void sendPluginMessage(@NotNull CommandSender sender, @NotNull CommandArguments args) {
-        Player player = (Player) args.get("player");
-        String channel = (String) args.get("channel");
-        String message = (String) args.get("message");
-
-        Bukkit.getServer().getMessenger().registerOutgoingPluginChannel(Main.getInstance(), channel);
-        ByteArrayDataOutput msg = ByteStreams.newDataOutput();
-
-        msg.writeUTF(message);
-        player.sendPluginMessage(Main.getInstance(), channel, msg.toByteArray());
-    }
+   public void sendPluginMessage(@NotNull CommandSender sender, @NotNull CommandArguments args) {
+      Player player = (Player)args.get("player");
+      String channel = (String)args.get("channel");
+      String message = (String)args.get("message");
+      Bukkit.getServer().getMessenger().registerOutgoingPluginChannel(Main.getInstance(), channel);
+      ByteArrayDataOutput msg = ByteStreams.newDataOutput();
+      msg.writeUTF(message);
+      player.sendPluginMessage(Main.getInstance(), channel, msg.toByteArray());
+   }
 }

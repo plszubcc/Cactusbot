@@ -30,162 +30,166 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class FakePlayerCommandArgument extends Argument<CommandResult> implements GreedyArgument {
+   SuggestionsBranch<CommandSender> replacements = SuggestionsBranch.suggest(new ArgumentSuggestions[0]);
 
-    SuggestionsBranch<CommandSender> replacements = SuggestionsBranch.suggest(new ArgumentSuggestions[0]);
+   public FakePlayerCommandArgument(String nodeName) {
+      super(nodeName, StringArgumentType.greedyString());
+      this.applySuggestions();
+   }
 
-    public FakePlayerCommandArgument(String nodeName) {
-        super(nodeName, StringArgumentType.greedyString());
-        this.applySuggestions();
-    }
-
-    private void applySuggestions() {
-        super.replaceSuggestions((infox, builderx) -> {
-            Player sender = this.getTarget(infox);
-
+   private void applySuggestions() {
+      super.replaceSuggestions(
+         (info, builder) -> {
+            Player sender = this.getTarget(info);
             if (sender == null) {
-                return Suggestions.empty();
+               return Suggestions.empty();
             } else {
-                SimpleCommandMap commandMap = CommandAPIBukkit.get().getNMS().getSimpleCommandMap();
-                String command = infox.currentArg();
-                StringReader context = new StringReader(command);
-
-                if (!command.contains(" ")) {
-                    ArgumentSuggestions<CommandSender> replacement = this.replacements.getNextSuggestion(sender, new String[0]);
-
-                    if (replacement != null) {
-                        return replacement.suggest(new SuggestionInfo(sender, new CommandArguments(new Object[0], new LinkedHashMap(), new String[0], new LinkedHashMap(), infox.currentInput()), command, command), builderx);
-                    } else {
-                        List<String> results = commandMap.tabComplete(sender, command);
-
-                        if (results == null) {
-                            throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand().createWithContext(context);
-                        } else {
-                            if (sender instanceof Player) {
-                                for (String result : results) {
-                                    builderx.suggest(result.substring(1));
-                                }
-                            } else {
-                                for (String result : results) {
-                                    builderx.suggest(result);
-                                }
-                            }
-
-                            return builderx.buildFuture();
-                        }
-                    }
-                } else {
-                    String commandLabel = command.substring(0, command.indexOf(" "));
-                    Command target = commandMap.getCommand(commandLabel);
-
-                    if (target == null) {
+               SimpleCommandMap commandMap = CommandAPIBukkit.get().getNMS().getSimpleCommandMap();
+               String command = info.currentArg();
+               StringReader context = new StringReader(command);
+               if (!command.contains(" ")) {
+                  ArgumentSuggestions<CommandSender> replacement = this.replacements.getNextSuggestion(sender, new String[0]);
+                  if (replacement != null) {
+                     return replacement.suggest(
+                        new SuggestionInfo(
+                           sender,
+                           new CommandArguments(new Object[0], new LinkedHashMap(), new String[0], new LinkedHashMap(), info.currentInput()),
+                           command,
+                           command
+                        ),
+                        builder
+                     );
+                  } else {
+                     List<String> results = commandMap.tabComplete(sender, command);
+                     if (results == null) {
                         throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand().createWithContext(context);
-                    } else {
-                        String[] arguments = command.split(" ");
-
-                        if (!arguments[0].isEmpty() && command.endsWith(" ")) {
-                            arguments = (String[]) Arrays.copyOf(arguments, arguments.length + 1);
-                            arguments[arguments.length - 1] = "";
-                        }
-
-                        builderx = builderx.createOffset(builderx.getStart() + command.lastIndexOf(" ") + 1);
-                        int lastIndex = arguments.length - 1;
-                        String[] previousArguments = (String[]) Arrays.copyOf(arguments, lastIndex);
-                        ArgumentSuggestions<CommandSender> replacement = this.replacements.getNextSuggestion(sender, previousArguments);
-
-                        if (replacement != null) {
-                            return replacement.suggest(new SuggestionInfo(sender, new CommandArguments(previousArguments, new LinkedHashMap(), previousArguments, new LinkedHashMap(), infox.currentInput()), command, arguments[lastIndex]), builderx);
+                     } else {
+                        if (sender instanceof Player) {
+                           for (String result : results) {
+                              builder.suggest(result.substring(1));
+                           }
                         } else {
-                            arguments = (String[]) Arrays.copyOfRange(arguments, 1, arguments.length);
-                            Location location = null;
-
-                            if (sender instanceof Player) {
-                                Block block = sender.getTargetBlockExact(5, FluidCollisionMode.NEVER);
-
-                                if (block != null) {
-                                    location = block.getLocation();
-                                }
-                            }
-
-                            for (String tabCompletion : target.tabComplete(sender, commandLabel, arguments, location)) {
-                                builderx.suggest(tabCompletion);
-                            }
-
-                            return builderx.buildFuture();
+                           for (String result : results) {
+                              builder.suggest(result);
+                           }
                         }
-                    }
-                }
+
+                        return builder.buildFuture();
+                     }
+                  }
+               } else {
+                  String commandLabel = command.substring(0, command.indexOf(" "));
+                  Command target = commandMap.getCommand(commandLabel);
+                  if (target == null) {
+                     throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand().createWithContext(context);
+                  } else {
+                     String[] arguments = command.split(" ");
+                     if (!arguments[0].isEmpty() && command.endsWith(" ")) {
+                        arguments = Arrays.copyOf(arguments, arguments.length + 1);
+                        arguments[arguments.length - 1] = "";
+                     }
+
+                     builder = builder.createOffset(builder.getStart() + command.lastIndexOf(" ") + 1);
+                     int lastIndex = arguments.length - 1;
+                     String[] previousArguments = Arrays.copyOf(arguments, lastIndex);
+                     ArgumentSuggestions<CommandSender> replacement = this.replacements.getNextSuggestion(sender, previousArguments);
+                     if (replacement != null) {
+                        return replacement.suggest(
+                           new SuggestionInfo(
+                              sender,
+                              new CommandArguments(previousArguments, new LinkedHashMap(), previousArguments, new LinkedHashMap(), info.currentInput()),
+                              command,
+                              arguments[lastIndex]
+                           ),
+                           builder
+                        );
+                     } else {
+                        arguments = Arrays.copyOfRange(arguments, 1, arguments.length);
+                        Location location = null;
+                        if (sender instanceof Player) {
+                           Block block = sender.getTargetBlockExact(5, FluidCollisionMode.NEVER);
+                           if (block != null) {
+                              location = block.getLocation();
+                           }
+                        }
+
+                        for (String tabCompletion : target.tabComplete(sender, commandLabel, arguments, location)) {
+                           builder.suggest(tabCompletion);
+                        }
+
+                        return builder.buildFuture();
+                     }
+                  }
+               }
             }
-        });
-    }
+         }
+      );
+   }
 
-    @SafeVarargs
-    public final FakePlayerCommandArgument replaceSuggestions(ArgumentSuggestions<CommandSender>... suggestions) {
-        this.replacements = SuggestionsBranch.suggest(suggestions);
-        return this;
-    }
+   @SafeVarargs
+   public final FakePlayerCommandArgument replaceSuggestions(ArgumentSuggestions<CommandSender>... suggestions) {
+      this.replacements = SuggestionsBranch.suggest(suggestions);
+      return this;
+   }
 
-    public FakePlayerCommandArgument replaceSuggestions(ArgumentSuggestions<CommandSender> suggestions) {
-        this.replacements = SuggestionsBranch.suggest(new ArgumentSuggestions[]{suggestions});
-        return this;
-    }
+   public FakePlayerCommandArgument replaceSuggestions(ArgumentSuggestions<CommandSender> suggestions) {
+      this.replacements = SuggestionsBranch.suggest(new ArgumentSuggestions[]{suggestions});
+      return this;
+   }
 
-    @SafeVarargs
-    public final Argument<CommandResult> branchSuggestions(SuggestionsBranch<CommandSender>... branches) {
-        this.replacements.branch(branches);
-        return this;
-    }
+   @SafeVarargs
+   public final Argument<CommandResult> branchSuggestions(SuggestionsBranch<CommandSender>... branches) {
+      this.replacements.branch(branches);
+      return this;
+   }
 
-    public Class<CommandResult> getPrimitiveType() {
-        return CommandResult.class;
-    }
+   public Class<CommandResult> getPrimitiveType() {
+      return CommandResult.class;
+   }
 
-    public CommandAPIArgumentType getArgumentType() {
-        return CommandAPIArgumentType.COMMAND;
-    }
+   public CommandAPIArgumentType getArgumentType() {
+      return CommandAPIArgumentType.COMMAND;
+   }
 
-    public <CommandSourceStack> CommandResult parseArgument(CommandContext<CommandSourceStack> cmdCtx, String key, CommandArguments previousArgs) throws CommandSyntaxException {
-        String command = (String) cmdCtx.getArgument(key, String.class);
-        SimpleCommandMap commandMap = CommandAPIBukkit.get().getNMS().getSimpleCommandMap();
-        StringReader context = new StringReader(command);
-        CommandSender sender = (CommandSender) CommandAPIBukkit.get().getSenderForCommand(cmdCtx, false).getSource();
-        Player target = (Player) previousArgs.get("name");
-
-        if (target == null) {
-            throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownArgument().createWithContext(context);
-        } else {
-            FakeplayerManager manager = (FakeplayerManager) Main.getInjector().getInstance(FakeplayerManager.class);
-
-            if (sender.isOp()) {
-                if (manager.isNotFake(target)) {
-                    throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand().createWithContext(context);
-                }
-            } else if (manager.get(sender, target.getName()) == null) {
-                throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand().createWithContext(context);
+   public <CommandSourceStack> CommandResult parseArgument(CommandContext<CommandSourceStack> cmdCtx, String key, CommandArguments previousArgs) throws CommandSyntaxException {
+      String command = (String)cmdCtx.getArgument(key, String.class);
+      SimpleCommandMap commandMap = CommandAPIBukkit.get().getNMS().getSimpleCommandMap();
+      StringReader context = new StringReader(command);
+      CommandSender sender = (CommandSender)CommandAPIBukkit.<CommandSourceStack>get().getSenderForCommand(cmdCtx, false).getSource();
+      Player target = (Player)previousArgs.get("name");
+      if (target == null) {
+         throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownArgument().createWithContext(context);
+      } else {
+         FakeplayerManager manager = (FakeplayerManager)Main.getInjector().getInstance(FakeplayerManager.class);
+         if (sender.isOp()) {
+            if (manager.isNotFake(target)) {
+               throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand().createWithContext(context);
             }
+         } else if (manager.get(sender, target.getName()) == null) {
+            throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand().createWithContext(context);
+         }
 
-            String[] arguments = command.split(" ");
-            String commandLabel = arguments[0];
-            Command cmd = commandMap.getCommand(commandLabel);
+         String[] arguments = command.split(" ");
+         String commandLabel = arguments[0];
+         Command cmd = commandMap.getCommand(commandLabel);
+         if (cmd == null) {
+            throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand().createWithContext(context);
+         } else {
+            this.replacements.enforceReplacements(target, arguments);
+            return new CommandResult(cmd, Arrays.copyOfRange(arguments, 1, arguments.length));
+         }
+      }
+   }
 
-            if (cmd == null) {
-                throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand().createWithContext(context);
-            } else {
-                this.replacements.enforceReplacements(target, arguments);
-                return new CommandResult(cmd, (String[]) Arrays.copyOfRange(arguments, 1, arguments.length));
-            }
-        }
-    }
-
-    private @Nullable Player getTarget(@NotNull SuggestionInfo<CommandSender> info) {
-        String[] args = info.previousArgs().fullInput().split(" ");
-
-        if (args.length < 3) {
-            return null;
-        } else {
-            String name = args[2];
-            FakeplayerManager manager = (FakeplayerManager) Main.getInjector().getInstance(FakeplayerManager.class);
-
-            return ((CommandSender) info.sender()).isOp() ? manager.get(name) : manager.get((CommandSender) info.sender(), name);
-        }
-    }
+   @Nullable
+   private Player getTarget(@NotNull SuggestionInfo<CommandSender> info) {
+      String[] args = info.previousArgs().fullInput().split(" ");
+      if (args.length < 3) {
+         return null;
+      } else {
+         String name = args[2];
+         FakeplayerManager manager = (FakeplayerManager)Main.getInjector().getInstance(FakeplayerManager.class);
+         return ((CommandSender)info.sender()).isOp() ? manager.get(name) : manager.get((CommandSender)info.sender(), name);
+      }
+   }
 }

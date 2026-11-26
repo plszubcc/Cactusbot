@@ -7,73 +7,72 @@ import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
 public interface NMSServerPlayer {
+   @NotNull
+   Player getPlayer();
 
-    @NotNull
-    Player getPlayer();
+   double getX();
 
-    double getX();
+   double getY();
 
-    double getY();
+   double getZ();
 
-    double getZ();
+   void setXo(double var1);
 
-    void setXo(double d0);
+   void setYo(double var1);
 
-    void setYo(double d0);
+   void setZo(double var1);
 
-    void setZo(double d0);
+   void doTick();
 
-    void doTick();
+   void absMoveTo(double var1, double var3, double var5, float var7, float var8);
 
-    void absMoveTo(double d0, double d1, double d2, float f, float f1);
+   float getYRot();
 
-    float getYRot();
+   void setYRot(float var1);
 
-    void setYRot(float f);
+   float getXRot();
 
-    float getXRot();
+   void setXRot(float var1);
 
-    void setXRot(float f);
+   float getZza();
 
-    float getZza();
+   void setZza(float var1);
 
-    void setZza(float f);
+   float getXxa();
 
-    float getXxa();
+   void setXxa(float var1);
 
-    void setXxa(float f);
+   void setDeltaMovement(@NotNull Vector var1);
 
-    void setDeltaMovement(@NotNull Vector vector);
+   boolean startRiding(@NotNull Entity var1, boolean var2);
 
-    boolean startRiding(@NotNull Entity entity, boolean flag);
+   void stopRiding();
 
-    void stopRiding();
+   void disableAdvancements(@NotNull Plugin var1);
 
-    void disableAdvancements(@NotNull Plugin plugin);
+   int getTickCount();
 
-    int getTickCount();
+   void drop(int var1, boolean var2, boolean var3);
 
-    void drop(int i, boolean flag, boolean flag1);
+   void drop(boolean var1);
 
-    void drop(boolean flag);
+   void resetLastActionTime();
 
-    void resetLastActionTime();
+   boolean onGround();
 
-    boolean onGround();
+   void jumpFromGround();
 
-    void jumpFromGround();
+   void setJumping(boolean var1);
 
-    void setJumping(boolean flag);
+   boolean isUsingItem();
 
-    boolean isUsingItem();
+   void setPlayBefore();
 
-    void setPlayBefore();
+   void setupClientOptions();
 
-    void setupClientOptions();
+   void respawn();
 
-    void respawn();
+   void swapItemWithOffhand();
 
-    void swapItemWithOffhand();
-
-    void startFallFlying();
+   void startFallFlying();
 }

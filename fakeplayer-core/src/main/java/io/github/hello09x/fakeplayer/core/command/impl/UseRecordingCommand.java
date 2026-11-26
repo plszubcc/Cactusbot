@@ -16,23 +16,27 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class UseRecordingCommand extends AbstractCommand {
+   private final RecordingReplayManager replayManager;
 
-    private final RecordingReplayManager replayManager;
+   @Inject
+   public UseRecordingCommand(RecordingReplayManager replayManager) {
+      this.replayManager = replayManager;
+   }
 
-    @Inject
-    public UseRecordingCommand(RecordingReplayManager replayManager) {
-        super();
-        this.replayManager = replayManager;
-    }
-
-    public void use(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
-        String recordingName = String.valueOf(args.get("recording"));
-        Player fake = this.getFakeplayer(sender, args);
-
-        if (!this.replayManager.useRecording(recordingName, fake)) {
-            throw CommandAPI.failWithString(ComponentUtils.toString(Component.translatable("fakeplayer.command.userec.error.not-found", new ComponentLike[]{Component.text(recordingName)}), TranslatorUtils.getLocale(sender)));
-        } else {
-            sender.sendMessage(Component.translatable("fakeplayer.command.userec.success", new ComponentLike[]{Component.text(recordingName), Component.text(fake.getName())}));
-        }
-    }
+   public void use(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
+      String recordingName = String.valueOf(args.get("recording"));
+      Player fake = this.getFakeplayer(sender, args);
+      if (!this.replayManager.useRecording(recordingName, fake)) {
+         throw CommandAPI.failWithString(
+            ComponentUtils.toString(
+               Component.translatable("fakeplayer.command.userec.error.not-found", new ComponentLike[]{Component.text(recordingName)}),
+               TranslatorUtils.getLocale(sender)
+            )
+         );
+      } else {
+         sender.sendMessage(
+            Component.translatable("fakeplayer.command.userec.success", new ComponentLike[]{Component.text(recordingName), Component.text(fake.getName())})
+         );
+      }
+   }
 }

@@ -7,47 +7,43 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class Reflections {
+   public Reflections() {
+   }
 
-    public Reflections() {
-        super();
-    }
+   @Nullable
+   public static Field getFirstFieldByType(@NotNull Class<?> clazz, @NotNull Class<?> fieldType, boolean includeStatic) {
+      for (Field field : clazz.getDeclaredFields()) {
+         if (!(includeStatic ^ Modifier.isStatic(field.getModifiers())) && field.getType() == fieldType) {
+            field.setAccessible(true);
+            return field;
+         }
+      }
 
-    public static @Nullable Field getFirstFieldByType(@NotNull Class<?> clazz, @NotNull Class<?> fieldType, boolean includeStatic) {
-        for (Field field : clazz.getDeclaredFields()) {
-            if (!(includeStatic ^ Modifier.isStatic(field.getModifiers())) && field.getType() == fieldType) {
-                field.setAccessible(true);
-                return field;
-            }
-        }
+      return null;
+   }
 
-        return null;
-    }
+   @N
+   public static Field getFistFieldByTypeIncludeParent(@NotNull Class<?> clazz, @NotNull Class<?> fieldType) {
+      for (Field field : clazz.getDeclaredFields()) {
+         if (field.getType() == fieldType) {
+            field.setAccessible(true);
+            return field;
+         }
+      }
 
-    public static @N Field getFistFieldByTypeIncludeParent(@NotNull Class<?> clazz, @NotNull Class<?> fieldType) {
-        for (Field field : clazz.getDeclaredFields()) {
-            if (field.getType() == fieldType) {
-                field.setAccessible(true);
-                return field;
-            }
-        }
+      Class<?> superclass = clazz.getSuperclass();
+      return superclass != null && superclass != Object.class ? getFistFieldByTypeIncludeParent(superclass, fieldType) : null;
+   }
 
-        Class<?> superclass = clazz.getSuperclass();
+   @Nullable
+   public static Field getFirstFieldByAssignFromType(@NotNull Class<?> clazz, @NotNull Class<?> fieldType, boolean includeStatic) {
+      for (Field field : clazz.getDeclaredFields()) {
+         if (!(includeStatic ^ Modifier.isStatic(field.getModifiers())) && fieldType.isAssignableFrom(field.getType())) {
+            field.setAccessible(true);
+            return field;
+         }
+      }
 
-        if (superclass != null && superclass != Object.class) {
-            return getFistFieldByTypeIncludeParent(superclass, fieldType);
-        } else {
-            return null;
-        }
-    }
-
-    public static @Nullable Field getFirstFieldByAssignFromType(@NotNull Class<?> clazz, @NotNull Class<?> fieldType, boolean includeStatic) {
-        for (Field field : clazz.getDeclaredFields()) {
-            if (!(includeStatic ^ Modifier.isStatic(field.getModifiers())) && fieldType.isAssignableFrom(field.getType())) {
-                field.setAccessible(true);
-                return field;
-            }
-        }
-
-        return null;
-    }
+      return null;
+   }
 }

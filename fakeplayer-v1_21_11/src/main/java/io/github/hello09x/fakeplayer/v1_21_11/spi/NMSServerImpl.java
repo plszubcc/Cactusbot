@@ -18,28 +18,31 @@ import org.bukkit.craftbukkit.v1_21_R7.CraftServer;
 import org.jetbrains.annotations.NotNull;
 
 public class NMSServerImpl implements NMSServer {
+   private final MinecraftServer handle;
 
-    private final MinecraftServer handle;
+   public NMSServerImpl(@NotNull Server server) {
+      this.handle = ((CraftServer)server).getServer();
+   }
 
-    public NMSServerImpl(@NotNull Server server) {
-        super();
-        this.handle = ((CraftServer) server).getServer();
-    }
+   @NotNull
+   @Override
+   public NMSServerPlayer newPlayer(@NotNull UUID uuid, @NotNull String name) {
+      MinecraftServer server = new NMSServerImpl(Bukkit.getServer()).getHandle();
+      EntityPlayer handle = new EntityPlayer(
+         new NMSServerImpl(Bukkit.getServer()).getHandle(),
+         new NMSServerLevelImpl(WorldUtils.getMainWorld()).getHandle(),
+         new GameProfile(uuid, name),
+         ClientInformation.a()
+      );
+      server.aj().s.a(handle.gJ()).ifPresent(nbt -> {
+         ValueInput valueInput = TagValueInput.a(ProblemReporter.a, server.bc(), nbt);
+         handle.d(valueInput);
+      });
+      return new NMSServerPlayerImpl(handle.getBukkitEntity());
+   }
 
-    public @NotNull NMSServerPlayer newPlayer(@NotNull UUID uuid, @NotNull String name) {
-        MinecraftServer server = (new NMSServerImpl(Bukkit.getServer())).getHandle();
-        EntityPlayer handle = new EntityPlayer((new NMSServerImpl(Bukkit.getServer())).getHandle(), (new NMSServerLevelImpl(WorldUtils.getMainWorld())).getHandle(), new GameProfile(uuid, name), ClientInformation.a());
-
-        server.aj().s.a(handle.gJ()).ifPresent((nbtx) -> {
-            ValueInput valueInput = TagValueInput.a(ProblemReporter.a, server.bc(), nbtx);
-
-            handle.d(valueInput);
-        });
-        return new NMSServerPlayerImpl(handle.getBukkitEntity());
-    }
-
-    @Generated
-    public MinecraftServer getHandle() {
-        return this.handle;
-    }
+   @Generated
+   public MinecraftServer getHandle() {
+      return this.handle;
+   }
 }

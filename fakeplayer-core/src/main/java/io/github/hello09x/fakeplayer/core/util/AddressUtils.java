@@ -7,16 +7,11 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public class AddressUtils {
+   public AddressUtils() {
+   }
 
-    public AddressUtils() {
-        super();
-    }
-
-    public static @NotNull String getAddress(@NotNull CommandSender sender) {
-        if (sender instanceof Player p) {
-            return (String) Optional.ofNullable(p.getAddress()).map(InetSocketAddress::getHostString).orElse("0.0.0.0");
-        } else {
-            return "127.0.0.1";
-        }
-    }
+   @NotNull
+   public static String getAddress(@NotNull CommandSender sender) {
+      return sender instanceof Player p ? Optional.ofNullable(p.getAddress()).map(InetSocketAddress::getHostString).orElse("0.0.0.0") : "127.0.0.1";
+   }
 }

@@ -11,15 +11,12 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class RespawnCommand extends AbstractCommand {
+   public RespawnCommand() {
+   }
 
-    public RespawnCommand() {
-        super();
-    }
-
-    public void respawn(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
-        Player fake = super.getFakeplayer(sender, args, Entity::isDead);
-
-        this.bridge.fromPlayer(fake).respawn();
-        sender.sendMessage(MessageUtils.translatableWithPrefix("fakeplayer.command.generic.success"));
-    }
+   public void respawn(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
+      Player fake = super.getFakeplayer(sender, args, Entity::isDead);
+      this.bridge.fromPlayer(fake).respawn();
+      sender.sendMessage(MessageUtils.translatableWithPrefix("fakeplayer.command.generic.success"));
+   }
 }

@@ -7,12 +7,10 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class KillallCommand extends AbstractCommand {
+   public KillallCommand() {
+   }
 
-    public KillallCommand() {
-        super();
-    }
-
-    public void killall(@NotNull CommandSender sender, @NotNull CommandArguments args) {
-        this.manager.removeAll("Command killall");
-    }
+   public void killall(@NotNull CommandSender sender, @NotNull CommandArguments args) {
+      this.manager.removeAll("Command killall");
+   }
 }

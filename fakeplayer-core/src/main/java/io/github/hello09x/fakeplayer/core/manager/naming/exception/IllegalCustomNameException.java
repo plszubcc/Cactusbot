@@ -5,8 +5,7 @@ import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
 public class IllegalCustomNameException extends CommandException {
-
-    public IllegalCustomNameException(@NotNull Component message) {
-        super(message);
-    }
+   public IllegalCustomNameException(@NotNull Component message) {
+      super(message);
+   }
 }

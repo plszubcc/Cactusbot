@@ -13,21 +13,26 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class ExpmeCommand extends AbstractCommand {
+   public ExpmeCommand() {
+   }
 
-    public ExpmeCommand() {
-        super();
-    }
-
-    public void expme(@NotNull Player sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
-        Player fake = this.getFakeplayer(sender, args);
-        int exp = ExperienceUtils.getExp(fake);
-
-        if (exp == 0) {
-            sender.sendMessage(Component.translatable("fakeplayer.command.expme.error.non-experience", new ComponentLike[]{Component.text(fake.getName(), NamedTextColor.WHITE)}).color(NamedTextColor.GRAY));
-        } else {
-            ExperienceUtils.clean(fake);
-            sender.giveExp(exp, false);
-            sender.sendMessage(MessageUtils.translatableWithPrefix("fakeplayer.command.expme.success", Component.text(fake.getName(), NamedTextColor.WHITE), Component.text(exp, NamedTextColor.DARK_GREEN)).color(NamedTextColor.GRAY));
-        }
-    }
+   public void expme(@NotNull Player sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
+      Player fake = this.getFakeplayer(sender, args);
+      int exp = ExperienceUtils.getExp(fake);
+      if (exp == 0) {
+         sender.sendMessage(
+            Component.translatable("fakeplayer.command.expme.error.non-experience", new ComponentLike[]{Component.text(fake.getName(), NamedTextColor.WHITE)})
+               .color(NamedTextColor.GRAY)
+         );
+      } else {
+         ExperienceUtils.clean(fake);
+         sender.giveExp(exp, false);
+         sender.sendMessage(
+            MessageUtils.translatableWithPrefix(
+                  "fakeplayer.command.expme.success", Component.text(fake.getName(), NamedTextColor.WHITE), Component.text(exp, NamedTextColor.DARK_GREEN)
+               )
+               .color(NamedTextColor.GRAY)
+         );
+      }
+   }
 }

@@ -14,49 +14,37 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class TraceAction implements Action {
+   protected final EntityPlayer player;
 
-    protected final EntityPlayer player;
+   protected TraceAction(@NotNull EntityPlayer player) {
+      this.player = player;
+   }
 
-    protected TraceAction(@NotNull EntityPlayer player) {
-        super();
-        this.player = player;
-    }
+   @Nullable
+   protected MovingObjectPosition getTarget() {
+      double reach = this.player.h.e() ? 5.0 : 4.5;
 
-    protected @Nullable MovingObjectPosition getTarget() {
-        double reach = this.player.h.e() ? 5.0D : 4.5D;
-
-        try {
-            CraftPlayer bukkit = this.player.getBukkitEntity();
-            List<MetadataValue> metadata = bukkit.getMetadata("fakeplayer:preset_reach");
-
-            if (metadata != null) {
-                for (MetadataValue value : metadata) {
-                    if (value != null) {
-                        Object object = value.value();
-
-                        if (object instanceof Number) {
-                            Number number = (Number) object;
-
-                            if (number.doubleValue() > 0.0D) {
-                                reach = number.doubleValue();
-                                return Tracer.rayTrace(this.player, 1.0F, reach, false);
-                            }
-                        }
-                    }
-                }
+      try {
+         CraftPlayer bukkit = this.player.getBukkitEntity();
+         List<MetadataValue> metadata = bukkit.getMetadata("fakeplayer:preset_reach");
+         if (metadata != null) {
+            for (MetadataValue value : metadata) {
+               if (value != null && value.value() instanceof Number number && number.doubleValue() > 0.0) {
+                  reach = number.doubleValue();
+                  return Tracer.rayTrace(this.player, 1.0F, reach, false);
+               }
             }
+         }
 
-            Field attributeField = Class.forName("org.bukkit.attribute.Attribute").getField("PLAYER_ENTITY_INTERACTION_RANGE");
-            Attribute attribute = (Attribute) attributeField.get((Object) null);
-            AttributeInstance attr = bukkit.getAttribute(attribute);
+         Field attributeField = Class.forName("org.bukkit.attribute.Attribute").getField("PLAYER_ENTITY_INTERACTION_RANGE");
+         Attribute attribute = (Attribute)attributeField.get(null);
+         AttributeInstance attr = bukkit.getAttribute(attribute);
+         if (attr != null && attr.getValue() > 0.0) {
+            reach = attr.getValue();
+         }
+      } catch (Throwable var9) {
+      }
 
-            if (attr != null && attr.getValue() > 0.0D) {
-                reach = attr.getValue();
-            }
-        } catch (Throwable throwable) {
-            ;
-        }
-
-        return Tracer.rayTrace(this.player, 1.0F, reach, false);
-    }
+      return Tracer.rayTrace(this.player, 1.0F, reach, false);
+   }
 }

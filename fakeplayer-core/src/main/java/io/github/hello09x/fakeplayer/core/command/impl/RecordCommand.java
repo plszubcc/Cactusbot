@@ -17,43 +17,51 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class RecordCommand extends AbstractCommand {
+   private final PlayerRecordingManager recordingManager;
+   private final RecordingStorage storage;
 
-    private final PlayerRecordingManager recordingManager;
-    private final RecordingStorage storage;
+   @Inject
+   public RecordCommand(PlayerRecordingManager recordingManager, RecordingStorage storage) {
+      this.recordingManager = recordingManager;
+      this.storage = storage;
+   }
 
-    @Inject
-    public RecordCommand(PlayerRecordingManager recordingManager, RecordingStorage storage) {
-        super();
-        this.recordingManager = recordingManager;
-        this.storage = storage;
-    }
-
-    public void record(@NotNull Player sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
-        String name = String.valueOf(args.get("recording"));
-        String action = String.valueOf(args.get("action"));
-
-        if (!this.storage.isValidName(name)) {
-            throw CommandAPI.failWithString(ComponentUtils.toString(Component.translatable("fakeplayer.command.record.error.invalid-name"), TranslatorUtils.getLocale(sender)));
-        } else if ("start".equalsIgnoreCase(action)) {
-            if (!this.recordingManager.start(sender, name)) {
-                throw CommandAPI.failWithString(ComponentUtils.toString(Component.translatable("fakeplayer.command.record.error.already"), TranslatorUtils.getLocale(sender)));
+   public void record(@NotNull Player sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
+      String name = String.valueOf(args.get("recording"));
+      String action = String.valueOf(args.get("action"));
+      if (!this.storage.isValidName(name)) {
+         throw CommandAPI.failWithString(
+            ComponentUtils.toString(Component.translatable("fakeplayer.command.record.error.invalid-name"), TranslatorUtils.getLocale(sender))
+         );
+      } else if ("start".equalsIgnoreCase(action)) {
+         if (!this.recordingManager.start(sender, name)) {
+            throw CommandAPI.failWithString(
+               ComponentUtils.toString(Component.translatable("fakeplayer.command.record.error.already"), TranslatorUtils.getLocale(sender))
+            );
+         } else {
+            sender.sendMessage(Component.translatable("fakeplayer.command.record.start.success", new ComponentLike[]{Component.text(name)}));
+         }
+      } else {
+         try {
+            RecordingData data = this.recordingManager.stop(sender);
+            if (data != null && data.name().equalsIgnoreCase(name)) {
+               sender.sendMessage(
+                  Component.translatable(
+                     "fakeplayer.command.record.stop.success", new ComponentLike[]{Component.text(data.name()), Component.text(data.sampleCount())}
+                  )
+               );
             } else {
-                sender.sendMessage(Component.translatable("fakeplayer.command.record.start.success", new ComponentLike[]{Component.text(name)}));
+               throw CommandAPI.failWithString(
+                  ComponentUtils.toString(Component.translatable("fakeplayer.command.record.error.none"), TranslatorUtils.getLocale(sender))
+               );
             }
-        } else {
-            try {
-                RecordingData data = this.recordingManager.stop(sender);
-
-                if (data != null && data.name().equalsIgnoreCase(name)) {
-                    sender.sendMessage(Component.translatable("fakeplayer.command.record.stop.success", new ComponentLike[]{Component.text(data.name()), Component.text(data.sampleCount())}));
-                } else {
-                    throw CommandAPI.failWithString(ComponentUtils.toString(Component.translatable("fakeplayer.command.record.error.none"), TranslatorUtils.getLocale(sender)));
-                }
-            } catch (WrapperCommandSyntaxException wrappercommandsyntaxexception) {
-                throw wrappercommandsyntaxexception;
-            } catch (Exception exception) {
-                throw CommandAPI.failWithString(ComponentUtils.toString(Component.translatable("fakeplayer.command.record.error.save-failed"), TranslatorUtils.getLocale(sender)));
-            }
-        }
-    }
+         } catch (WrapperCommandSyntaxException var6) {
+            throw var6;
+         } catch (Exception var7) {
+            throw CommandAPI.failWithString(
+               ComponentUtils.toString(Component.translatable("fakeplayer.command.record.error.save-failed"), TranslatorUtils.getLocale(sender))
+            );
+         }
+      }
+   }
 }

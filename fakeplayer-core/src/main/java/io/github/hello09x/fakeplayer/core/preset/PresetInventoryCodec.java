@@ -12,60 +12,80 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class PresetInventoryCodec {
+   private PresetInventoryCodec() {
+   }
 
-    private PresetInventoryCodec() {
-        super();
-    }
+   @Nullable
+   public static String encode(@Nullable PresetInventorySnapshot snapshot) {
+      if (snapshot == null) {
+         return null;
+      } else {
+         try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            BukkitObjectOutputStream oos = new BukkitObjectOutputStream(baos);
 
-    public static @Nullable String encode(@Nullable PresetInventorySnapshot snapshot) {
-        if (snapshot == null) {
-            return null;
-        } else {
             try {
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+               oos.writeObject(snapshot.storageContents());
+               oos.writeObject(snapshot.armorContents());
+               oos.writeObject(snapshot.offhand());
+               oos.writeInt(snapshot.heldSlot());
+            } catch (Throwable var6) {
+               try {
+                  oos.close();
+               } catch (Throwable var5) {
+                  var6.addSuppressed(var5);
+               }
 
-                try (BukkitObjectOutputStream oos = new BukkitObjectOutputStream(baos)) {
-                    oos.writeObject(snapshot.storageContents());
-                    oos.writeObject(snapshot.armorContents());
-                    oos.writeObject(snapshot.offhand());
-                    oos.writeInt(snapshot.heldSlot());
-                }
-
-                return Base64.getEncoder().encodeToString(baos.toByteArray());
-            } catch (Exception exception) {
-                return null;
+               throw var6;
             }
-        }
-    }
 
-    public static @Nullable PresetInventorySnapshot decode(@Nullable String base64) {
-        if (base64 != null && !base64.isBlank()) {
-            try {
-                byte[] bytes = Base64.getDecoder().decode(base64);
-
-                PresetInventorySnapshot presetinventorysnapshot;
-
-                try (BukkitObjectInputStream ois = new BukkitObjectInputStream(new ByteArrayInputStream(bytes))) {
-                    ItemStack[] storage = (ItemStack[]) ois.readObject();
-                    ItemStack[] armor = (ItemStack[]) ois.readObject();
-                    ItemStack offhand = (ItemStack) ois.readObject();
-                    int heldSlot = ois.readInt();
-
-                    presetinventorysnapshot = new PresetInventorySnapshot(storage == null ? new ItemStack[0] : storage, armor == null ? new ItemStack[0] : armor, offhand, heldSlot);
-                }
-
-                return presetinventorysnapshot;
-            } catch (Exception exception) {
-                return null;
-            }
-        } else {
+            oos.close();
+            return Base64.getEncoder().encodeToString(baos.toByteArray());
+         } catch (Exception var7) {
             return null;
-        }
-    }
+         }
+      }
+   }
 
-    public static @NotNull PresetInventorySnapshot capture(@NotNull Player player) {
-        PlayerInventory inv = player.getInventory();
+   @Nullable
+   public static PresetInventorySnapshot decode(@Nullable String base64) {
+      if (base64 != null && !base64.isBlank()) {
+         try {
+            byte[] bytes = Base64.getDecoder().decode(base64);
+            BukkitObjectInputStream ois = new BukkitObjectInputStream(new ByteArrayInputStream(bytes));
 
-        return new PresetInventorySnapshot((ItemStack[]) inv.getStorageContents().clone(), (ItemStack[]) inv.getArmorContents().clone(), inv.getItemInOffHand(), inv.getHeldItemSlot());
-    }
+            PresetInventorySnapshot var7;
+            try {
+               ItemStack[] storage = (ItemStack[])ois.readObject();
+               ItemStack[] armor = (ItemStack[])ois.readObject();
+               ItemStack offhand = (ItemStack)ois.readObject();
+               int heldSlot = ois.readInt();
+               var7 = new PresetInventorySnapshot(storage == null ? new ItemStack[0] : storage, armor == null ? new ItemStack[0] : armor, offhand, heldSlot);
+            } catch (Throwable var9) {
+               try {
+                  ois.close();
+               } catch (Throwable var8) {
+                  var9.addSuppressed(var8);
+               }
+
+               throw var9;
+            }
+
+            ois.close();
+            return var7;
+         } catch (Exception var10) {
+            return null;
+         }
+      } else {
+         return null;
+      }
+   }
+
+   @NotNull
+   public static PresetInventorySnapshot capture(@NotNull Player player) {
+      PlayerInventory inv = player.getInventory();
+      return new PresetInventorySnapshot(
+         (ItemStack[])inv.getStorageContents().clone(), (ItemStack[])inv.getArmorContents().clone(), inv.getItemInOffHand(), inv.getHeldItemSlot()
+      );
+   }
 }

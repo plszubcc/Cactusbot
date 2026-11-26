@@ -6,26 +6,30 @@ import org.bukkit.inventory.PlayerInventory;
 import org.jetbrains.annotations.NotNull;
 
 public class DropInventoryAction implements Action {
+   @NotNull
+   private final NMSServerPlayer player;
 
-    private final @NotNull NMSServerPlayer player;
+   public DropInventoryAction(@NotNull NMSServerPlayer player) {
+      this.player = player;
+   }
 
-    public DropInventoryAction(@NotNull NMSServerPlayer player) {
-        super();
-        this.player = player;
-    }
+   @Override
+   public boolean tick() {
+      PlayerInventory inventory = this.player.getPlayer().getInventory();
 
-    public boolean tick() {
-        PlayerInventory inventory = this.player.getPlayer().getInventory();
+      for (int i = inventory.getSize(); i >= 0; i--) {
+         this.player.drop(i, false, true);
+      }
 
-        for (int i = inventory.getSize(); i >= 0; --i) {
-            this.player.drop(i, false, true);
-        }
+      this.player.resetLastActionTime();
+      return true;
+   }
 
-        this.player.resetLastActionTime();
-        return true;
-    }
+   @Override
+   public void inactiveTick() {
+   }
 
-    public void inactiveTick() {}
-
-    public void stop() {}
+   @Override
+   public void stop() {
+   }
 }

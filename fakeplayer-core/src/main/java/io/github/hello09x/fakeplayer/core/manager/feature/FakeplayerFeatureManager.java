@@ -18,64 +18,58 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class FakeplayerFeatureManager {
+   private final UserConfigRepository repository;
+   private final FakeplayerConfig config;
 
-    private final UserConfigRepository repository;
-    private final FakeplayerConfig config;
+   @Inject
+   public FakeplayerFeatureManager(UserConfigRepository repository, FakeplayerConfig config) {
+      this.repository = repository;
+      this.config = config;
+   }
 
-    @Inject
-    public FakeplayerFeatureManager(UserConfigRepository repository, FakeplayerConfig config) {
-        super();
-        this.repository = repository;
-        this.config = config;
-    }
+   @NotNull
+   private String getDefaultOption(@NotNull Feature key) {
+      return Optional.ofNullable(this.config.getDefaultFeatures().get(key)).filter(option -> key.getOptions().contains(option)).orElse(key.getDefaultOption());
+   }
 
-    private @NotNull String getDefaultOption(@NotNull Feature key) {
-        return (String) Optional.ofNullable((String) this.config.getDefaultFeatures().get(key)).filter((optionx) -> {
-            return key.getOptions().contains(optionx);
-        }).orElse(key.getDefaultOption());
-    }
+   @NotNull
+   public FeatureInstance getFeature(@NotNull Player player, @NotNull Feature key) {
+      if (!key.testPermissions(player)) {
+         return new FeatureInstance(key, this.getDefaultOption(key));
+      } else {
+         String value = Optional.ofNullable(this.repository.selectByPlayerIdAndKey(player.getUniqueId(), key))
+            .map(UserConfig::value)
+            .orElseGet(() -> this.getDefaultOption(key));
+         return new FeatureInstance(key, value);
+      }
+   }
 
-    public @NotNull FeatureInstance getFeature(@NotNull Player player, @NotNull Feature key) {
-        if (!key.testPermissions(player)) {
-            return new FeatureInstance(key, this.getDefaultOption(key));
-        } else {
-            String value = (String) Optional.ofNullable(this.repository.selectByPlayerIdAndKey(player.getUniqueId(), key)).map(UserConfig::value).orElseGet(() -> {
-                return this.getDefaultOption(key);
-            });
+   @NotNull
+   public Map<Feature, FeatureInstance> getFeatures(@NotNull CommandSender sender) {
+      Map<Feature, UserConfig> userConfigs;
+      if (sender instanceof Player player) {
+         userConfigs = this.repository.selectByPlayerId(player.getUniqueId()).stream().collect(Collectors.toMap(UserConfig::key, Function.identity()));
+      } else {
+         userConfigs = Collections.emptyMap();
+      }
 
-            return new FeatureInstance(key, value);
-        }
-    }
+      LinkedHashMap<Feature, FeatureInstance> configs = new LinkedHashMap<>(Feature.values().length, 1.0F);
 
-    public @NotNull Map<Feature, FeatureInstance> getFeatures(@NotNull CommandSender sender) {
-        Map<Feature, UserConfig> userConfigs;
+      for (Feature key : Feature.values()) {
+         String value;
+         if (!key.testPermissions(sender)) {
+            value = this.getDefaultOption(key);
+         } else {
+            value = Optional.ofNullable(userConfigs.get(key)).map(UserConfig::value).orElseGet(() -> this.getDefaultOption(key));
+         }
 
-        if (sender instanceof Player player) {
-            userConfigs = (Map) this.repository.selectByPlayerId(player.getUniqueId()).stream().collect(Collectors.toMap(UserConfig::key, Function.identity()));
-        } else {
-            userConfigs = Collections.emptyMap();
-        }
+         configs.put(key, new FeatureInstance(key, value));
+      }
 
-        LinkedHashMap<Feature, FeatureInstance> configs = new LinkedHashMap(Feature.values().length, 1.0F);
+      return configs;
+   }
 
-        for (Feature key : Feature.values()) {
-            String value;
-
-            if (!key.testPermissions(sender)) {
-                value = this.getDefaultOption(key);
-            } else {
-                value = (String) Optional.ofNullable((UserConfig) userConfigs.get(key)).map(UserConfig::value).orElseGet(() -> {
-                    return this.getDefaultOption(key);
-                });
-            }
-
-            configs.put(key, new FeatureInstance(key, value));
-        }
-
-        return configs;
-    }
-
-    public void setFeature(@NotNull Player player, @NotNull Feature key, @NotNull String value) {
-        this.repository.saveOrUpdate(new UserConfig((Integer) null, player.getUniqueId(), key, value));
-    }
+   public void setFeature(@NotNull Player player, @NotNull Feature key, @NotNull String value) {
+      this.repository.saveOrUpdate(new UserConfig(null, player.getUniqueId(), key, value));
+   }
 }

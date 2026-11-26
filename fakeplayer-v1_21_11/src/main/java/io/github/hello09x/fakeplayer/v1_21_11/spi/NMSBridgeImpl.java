@@ -25,66 +25,84 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public class NMSBridgeImpl implements NMSBridge {
+   private static final Set<String> SUPPORTS = Set.of("1.21.11");
 
-    private static final Set<String> SUPPORTS = Set.of("1.21.11");
+   public NMSBridgeImpl() {
+   }
 
-    public NMSBridgeImpl() {
-        super();
-    }
+   @NotNull
+   @Override
+   public NMSEntity fromEntity(@NotNull Entity entity) {
+      return new NMSEntityImpl(entity);
+   }
 
-    public @NotNull NMSEntity fromEntity(@NotNull Entity entity) {
-        return new NMSEntityImpl(entity);
-    }
+   @NotNull
+   @Override
+   public NMSServer fromServer(@NotNull Server server) {
+      return new NMSServerImpl(server);
+   }
 
-    public @NotNull NMSServer fromServer(@NotNull Server server) {
-        return new NMSServerImpl(server);
-    }
+   @NotNull
+   @Override
+   public NMSServerLevel fromWorld(@NotNull World world) {
+      return new NMSServerLevelImpl(world);
+   }
 
-    public @NotNull NMSServerLevel fromWorld(@NotNull World world) {
-        return new NMSServerLevelImpl(world);
-    }
+   @NotNull
+   @Override
+   public NMSServerPlayer fromPlayer(@NotNull Player player) {
+      return new NMSServerPlayerImpl(player);
+   }
 
-    public @NotNull NMSServerPlayer fromPlayer(@NotNull Player player) {
-        return new NMSServerPlayerImpl(player);
-    }
+   @NotNull
+   @Override
+   public NMSNetwork createNetwork(@NotNull InetAddress address) {
+      return new NMSNetworkImpl(address);
+   }
 
-    public @NotNull NMSNetwork createNetwork(@NotNull InetAddress address) {
-        return new NMSNetworkImpl(address);
-    }
+   @Override
+   public boolean isSupported() {
+      return SUPPORTS.contains(Bukkit.getMinecraftVersion());
+   }
 
-    public boolean isSupported() {
-        return NMSBridgeImpl.SUPPORTS.contains(Bukkit.getMinecraftVersion());
-    }
+   @NotNull
+   @Override
+   public ActionTicker createAction(@NotNull Player player, @NotNull ActionType action, @NotNull ActionSetting setting) {
+      return new ActionTickerImpl((NMSBridge)Main.getInjector().getInstance(NMSBridge.class), player, action, setting);
+   }
 
-    public @NotNull ActionTicker createAction(@NotNull Player player, @NotNull ActionType action, @NotNull ActionSetting setting) {
-        return new ActionTickerImpl((NMSBridge) Main.getInjector().getInstance(NMSBridge.class), player, action, setting);
-    }
+   @Override
+   public boolean criticalAttack(@NotNull Player player) {
+      return new CriticalAttackAction(((CraftPlayer)player).getHandle()).tick();
+   }
 
-    public boolean criticalAttack(@NotNull Player player) {
-        return (new CriticalAttackAction(((CraftPlayer) player).getHandle())).tick();
-    }
+   @Override
+   public boolean maceAttack(@NotNull Player player) {
+      return new MaceAttackAction(((CraftPlayer)player).getHandle()).tick();
+   }
 
-    public boolean maceAttack(@NotNull Player player) {
-        return (new MaceAttackAction(((CraftPlayer) player).getHandle())).tick();
-    }
+   @Override
+   public boolean placeHeldBlock(@NotNull Player player, double range, @NotNull PlaceSide side) {
+      return InteractionAction.placeHeldBlock(((CraftPlayer)player).getHandle(), range, side);
+   }
 
-    public boolean placeHeldBlock(@NotNull Player player, double range, @NotNull PlaceSide side) {
-        return InteractionAction.placeHeldBlock(((CraftPlayer) player).getHandle(), range, side);
-    }
+   @Override
+   public boolean placeCrystal(@NotNull Player player, double range) {
+      return InteractionAction.placeCrystal(((CraftPlayer)player).getHandle(), range);
+   }
 
-    public boolean placeCrystal(@NotNull Player player, double range) {
-        return InteractionAction.placeCrystal(((CraftPlayer) player).getHandle(), range);
-    }
+   @Override
+   public boolean breakCrystal(@NotNull Player player, double range) {
+      return InteractionAction.breakCrystal(((CraftPlayer)player).getHandle(), range);
+   }
 
-    public boolean breakCrystal(@NotNull Player player, double range) {
-        return InteractionAction.breakCrystal(((CraftPlayer) player).getHandle(), range);
-    }
+   @Override
+   public boolean useLavaBucketOnTarget(@NotNull Player player, @NotNull Player target, double range) {
+      return InteractionAction.useLavaBucketOnTarget(((CraftPlayer)player).getHandle(), ((CraftPlayer)target).getHandle(), range);
+   }
 
-    public boolean useLavaBucketOnTarget(@NotNull Player player, @NotNull Player target, double range) {
-        return InteractionAction.useLavaBucketOnTarget(((CraftPlayer) player).getHandle(), ((CraftPlayer) target).getHandle(), range);
-    }
-
-    public boolean pickupFluid(@NotNull Player player, double range) {
-        return InteractionAction.pickupFluid(((CraftPlayer) player).getHandle(), range);
-    }
+   @Override
+   public boolean pickupFluid(@NotNull Player player, double range) {
+      return InteractionAction.pickupFluid(((CraftPlayer)player).getHandle(), range);
+   }
 }

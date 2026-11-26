@@ -10,39 +10,34 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class PlaceCommand extends AbstractCommand {
+   public PlaceCommand() {
+   }
 
-    public PlaceCommand() {
-        super();
-    }
+   public void place(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
+      Player fake = this.getFakeplayer(sender, args);
+      double range = this.getRange(args);
+      this.bridge.placeHeldBlock(fake, range, this.getSide(args));
+   }
 
-    public void place(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
-        Player fake = this.getFakeplayer(sender, args);
-        double range = this.getRange(args);
-
-        this.bridge.placeHeldBlock(fake, range, this.getSide(args));
-    }
-
-    private double getRange(@NotNull CommandArguments args) {
-        Object value = args.get("range");
-
-        if (value instanceof Number number) {
-            return number.doubleValue();
-        } else {
-            if (value instanceof String text) {
-                try {
-                    return Double.parseDouble(text);
-                } catch (NumberFormatException numberformatexception) {
-                    ;
-                }
+   private double getRange(@NotNull CommandArguments args) {
+      Object value = args.get("range");
+      if (value instanceof Number number) {
+         return number.doubleValue();
+      } else {
+         if (value instanceof String text) {
+            try {
+               return Double.parseDouble(text);
+            } catch (NumberFormatException var5) {
             }
+         }
 
-            return 4.5D;
-        }
-    }
+         return 4.5;
+      }
+   }
 
-    private @NotNull PlaceSide getSide(@NotNull CommandArguments args) {
-        Object value = args.get("side");
-
-        return value != null ? PlaceSide.from(String.valueOf(value)) : PlaceSide.FRONT;
-    }
+   @NotNull
+   private PlaceSide getSide(@NotNull CommandArguments args) {
+      Object value = args.get("side");
+      return value != null ? PlaceSide.from(String.valueOf(value)) : PlaceSide.FRONT;
+   }
 }

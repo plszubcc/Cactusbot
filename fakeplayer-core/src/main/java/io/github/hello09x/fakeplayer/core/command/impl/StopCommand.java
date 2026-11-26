@@ -11,18 +11,15 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class StopCommand extends AbstractCommand {
+   private final ActionManager actionManager;
 
-    private final ActionManager actionManager;
+   @Inject
+   public StopCommand(ActionManager actionManager) {
+      this.actionManager = actionManager;
+   }
 
-    @Inject
-    public StopCommand(ActionManager actionManager) {
-        super();
-        this.actionManager = actionManager;
-    }
-
-    public void stop(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
-        Player fake = super.getFakeplayer(sender, args);
-
-        this.actionManager.stop(fake);
-    }
+   public void stop(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
+      Player fake = super.getFakeplayer(sender, args);
+      this.actionManager.stop(fake);
+   }
 }

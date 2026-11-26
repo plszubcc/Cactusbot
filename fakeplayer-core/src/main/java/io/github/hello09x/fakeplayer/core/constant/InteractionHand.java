@@ -5,17 +5,18 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.jetbrains.annotations.NotNull;
 
 public enum InteractionHand {
+   MAIN_HAND(EquipmentSlot.HAND),
+   OFF_HAND(EquipmentSlot.OFF_HAND);
 
-    MAIN_HAND(EquipmentSlot.HAND), OFF_HAND(EquipmentSlot.OFF_HAND);
+   final EquipmentSlot slot;
 
-    final EquipmentSlot slot;
+   @NotNull
+   public EquipmentSlot asSlot() {
+      return this.slot;
+   }
 
-    public @NotNull EquipmentSlot asSlot() {
-        return this.slot;
-    }
-
-    @Generated
-    private InteractionHand(EquipmentSlot slot) {
-        this.slot = slot;
-    }
+   @Generated
+   private InteractionHand(final EquipmentSlot slot) {
+      this.slot = slot;
+   }
 }

@@ -5,21 +5,25 @@ import io.github.hello09x.fakeplayer.api.spi.NMSServerPlayer;
 import org.jetbrains.annotations.NotNull;
 
 public class DropItemAction implements Action {
+   @NotNull
+   private final NMSServerPlayer player;
 
-    private final @NotNull NMSServerPlayer player;
+   public DropItemAction(@NotNull NMSServerPlayer player) {
+      this.player = player;
+   }
 
-    public DropItemAction(@NotNull NMSServerPlayer player) {
-        super();
-        this.player = player;
-    }
+   @Override
+   public boolean tick() {
+      this.player.drop(false);
+      this.player.resetLastActionTime();
+      return true;
+   }
 
-    public boolean tick() {
-        this.player.drop(false);
-        this.player.resetLastActionTime();
-        return true;
-    }
+   @Override
+   public void inactiveTick() {
+   }
 
-    public void inactiveTick() {}
-
-    public void stop() {}
+   @Override
+   public void stop() {
+   }
 }

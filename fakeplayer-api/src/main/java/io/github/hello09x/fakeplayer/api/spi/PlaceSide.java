@@ -4,25 +4,21 @@ import java.util.Locale;
 import org.jetbrains.annotations.NotNull;
 
 public enum PlaceSide {
+   FRONT,
+   LEFT,
+   RIGHT;
 
-    FRONT, LEFT, RIGHT;
+   private PlaceSide() {
+   }
 
-    private PlaceSide() {}
+   @NotNull
+   public static PlaceSide from(@NotNull String raw) {
+      String var1 = raw.trim().toLowerCase(Locale.ROOT);
 
-    public static @NotNull PlaceSide from(@NotNull String raw) {
-        PlaceSide placeside;
-
-        switch (raw.trim().toLowerCase(Locale.ROOT)) {
-            case "left":
-                placeside = PlaceSide.LEFT;
-                break;
-            case "right":
-                placeside = PlaceSide.RIGHT;
-                break;
-            default:
-                placeside = PlaceSide.FRONT;
-        }
-
-        return placeside;
-    }
+      return switch (var1) {
+         case "left" -> LEFT;
+         case "right" -> RIGHT;
+         default -> FRONT;
+      };
+   }
 }

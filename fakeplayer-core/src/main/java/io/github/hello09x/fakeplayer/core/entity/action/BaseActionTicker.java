@@ -16,74 +16,65 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnknownNullability;
 
 public abstract class BaseActionTicker implements ActionTicker {
+   protected final NMSBridge bridge;
+   @UnknownNullability
+   protected Action action;
+   @NotNull
+   protected ActionSetting setting;
 
-    protected final NMSBridge bridge;
-    protected @UnknownNullability Action action;
-    protected @NotNull ActionSetting setting;
+   public BaseActionTicker(NMSBridge nms, @NotNull Player player, @NotNull ActionType action, @NotNull ActionSetting setting) {
+      this.bridge = nms;
+      this.setting = setting;
 
-    public BaseActionTicker(NMSBridge nms, @NotNull Player player, @NotNull ActionType action, @NotNull ActionSetting setting) {
-        super();
-        this.bridge = nms;
-        this.setting = setting;
-        Object object;
+      this.action = (Action)(switch (action) {
+         case JUMP -> new JumpAction(nms.fromPlayer(player));
+         case LOOK_AT_NEAREST_ENTITY -> new LookAtEntityAction(nms.fromPlayer(player));
+         case DROP_ITEM -> new DropItemAction(nms.fromPlayer(player));
+         case DROP_STACK -> new DropStackAction(nms.fromPlayer(player));
+         case DROP_INVENTORY -> new DropInventoryAction(nms.fromPlayer(player));
+         default -> null;
+      });
+   }
 
-        switch (action) {
-            case JUMP:
-                object = new JumpAction(nms.fromPlayer(player));
-                break;
-            case LOOK_AT_NEAREST_ENTITY:
-                object = new LookAtEntityAction(nms.fromPlayer(player));
-                break;
-            case DROP_ITEM:
-                object = new DropItemAction(nms.fromPlayer(player));
-                break;
-            case DROP_STACK:
-                object = new DropStackAction(nms.fromPlayer(player));
-                break;
-            case DROP_INVENTORY:
-                object = new DropInventoryAction(nms.fromPlayer(player));
-                break;
-            default:
-                object = null;
-        }
-
-        this.action = (Action) object;
-    }
-
-    public boolean tick() {
-        if (this.setting.equals(ActionSetting.stop())) {
-            this.action.stop();
-            return true;
-        } else if (this.setting.wait > 0) {
-            --this.setting.wait;
-            this.inactiveTick();
-            return false;
-        } else if (this.setting.remains == 0) {
-            this.inactiveTick();
-            return true;
-        } else {
-            try {
-                if (this.action.tick() && this.setting.remains > 0) {
-                    --this.setting.remains;
-                }
-            } finally {
-                this.setting.wait = this.setting.interval;
+   @Override
+   public boolean tick() {
+      if (this.setting.equals(ActionSetting.stop())) {
+         this.action.stop();
+         return true;
+      } else if (this.setting.wait > 0) {
+         this.setting.wait--;
+         this.inactiveTick();
+         return false;
+      } else if (this.setting.remains == 0) {
+         this.inactiveTick();
+         return true;
+      } else {
+         try {
+            if (this.action.tick() && this.setting.remains > 0) {
+               this.setting.remains--;
             }
+         } finally {
+            this.setting.wait = this.setting.interval;
+         }
 
-            return false;
-        }
-    }
+         return false;
+      }
+   }
 
-    public void inactiveTick() {
-        this.action.inactiveTick();
-    }
+   @Override
+   public void inactiveTick() {
+      this.action.inactiveTick();
+   }
 
-    public void stop() {
-        this.action.stop();
-    }
+   @Override
+   public void stop() {
+      this.action.stop();
+   }
 
-    @Generated
-    public @NotNull ActionSetting getSetting() {
-        return this.setting;
-    }
+   @NotNull
+   @Generated
+   @Override
+   public ActionSetting getSetting() {
+      return this.setting;
+   }
 }

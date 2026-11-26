@@ -14,19 +14,23 @@ import org.jetbrains.annotations.Nullable;
 
 @Singleton
 public class SimpleInvseeManagerImpl extends AbstractInvseeManager {
+   @Inject
+   public SimpleInvseeManagerImpl(FakeplayerManager manager, FakeplayerList fakeplayerList) {
+      super(manager, fakeplayerList);
+   }
 
-    @Inject
-    public SimpleInvseeManagerImpl(FakeplayerManager manager, FakeplayerList fakeplayerList) {
-        super(manager, fakeplayerList);
-    }
+   @Nullable
+   @Override
+   protected InventoryView openInventory(@NotNull Player viewer, @NotNull Player whom) {
+      InventoryView view = viewer.openInventory(whom.getInventory());
+      if (view != null) {
+         view.setTitle(
+            ComponentUtils.toString(
+               Component.translatable("fakeplayer.manager.inventory.title", new ComponentLike[]{Component.text(whom.getName())}), viewer.locale()
+            )
+         );
+      }
 
-    protected @Nullable InventoryView openInventory(@NotNull Player viewer, @NotNull Player whom) {
-        InventoryView view = viewer.openInventory(whom.getInventory());
-
-        if (view != null) {
-            view.setTitle(ComponentUtils.toString(Component.translatable("fakeplayer.manager.inventory.title", new ComponentLike[]{Component.text(whom.getName())}), viewer.locale()));
-        }
-
-        return view;
-    }
+      return view;
+   }
 }

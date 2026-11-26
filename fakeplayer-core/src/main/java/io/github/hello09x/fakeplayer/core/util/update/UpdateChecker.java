@@ -13,45 +13,39 @@ import java.nio.charset.StandardCharsets;
 import org.jetbrains.annotations.NotNull;
 
 public class UpdateChecker {
+   private static final Gson gson = new Gson();
+   private final String author;
+   private final String repository;
 
-    private static final Gson gson = new Gson();
-    private final String author;
-    private final String repository;
+   public UpdateChecker(@NotNull String author, @NotNull String repository) {
+      this.author = author;
+      this.repository = repository;
+   }
 
-    public UpdateChecker(@NotNull String author, @NotNull String repository) {
-        super();
-        this.author = author;
-        this.repository = repository;
-    }
+   public static boolean isNew(@NotNull String local, @NotNull String remote) {
+      Version a;
+      Version b;
+      try {
+         a = Version.parse(local);
+         b = Version.parse(remote);
+      } catch (InvalidVersionException var5) {
+         return false;
+      }
 
-    public static boolean isNew(@NotNull String local, @NotNull String remote) {
-        Version a;
-        Version b;
+      return a.compareTo(b) < 0;
+   }
 
-        try {
-            a = Version.parse(local);
-            b = Version.parse(remote);
-        } catch (InvalidVersionException invalidversionexception) {
-            return false;
-        }
-
-        return a.compareTo(b) < 0;
-    }
-
-    public @NotNull Release getLastRelease() throws IOException, InterruptedException {
-        String url = String.format("https://api.github.com/repos/%s/%s/releases/latest", this.author, this.repository);
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).GET().build();
-        HttpResponse<String> response = client.send(request, BodyHandlers.ofString(StandardCharsets.UTF_8));
-
-        if (response.statusCode() != 200) {
-            int i = response.statusCode();
-
-            throw new IllegalStateException("Not 200 response: " + i + ": " + (String) response.body());
-        } else {
-            String body = (String) response.body();
-
-            return (Release) UpdateChecker.gson.fromJson(body, Release.class);
-        }
-    }
+   @NotNull
+   public Release getLastRelease() throws IOException, InterruptedException {
+      String url = String.format("https://api.github.com/repos/%s/%s/releases/latest", this.author, this.repository);
+      HttpClient client = HttpClient.newHttpClient();
+      HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).GET().build();
+      HttpResponse<String> response = client.send(request, BodyHandlers.ofString(StandardCharsets.UTF_8));
+      if (response.statusCode() != 200) {
+         throw new IllegalStateException("Not 200 response: " + response.statusCode() + ": " + response.body());
+      } else {
+         String body = response.body();
+         return (Release)gson.fromJson(body, Release.class);
+      }
+   }
 }

@@ -5,10 +5,9 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public interface NMSNetwork {
+   @NotNull
+   NMSServerGamePacketListener placeNewPlayer(@NotNull Server var1, @NotNull Player var2);
 
-    @NotNull
-    NMSServerGamePacketListener placeNewPlayer(@NotNull Server server, @NotNull Player player);
-
-    @NotNull
-    NMSServerGamePacketListener getServerGamePacketListener() throws IllegalStateException;
+   @NotNull
+   NMSServerGamePacketListener getServerGamePacketListener() throws IllegalStateException;
 }

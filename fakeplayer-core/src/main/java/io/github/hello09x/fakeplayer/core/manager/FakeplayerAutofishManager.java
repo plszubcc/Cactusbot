@@ -18,45 +18,42 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class FakeplayerAutofishManager implements Listener {
+   private final FakeplayerManager manager;
+   private final ActionManager actionManager;
 
-    private final FakeplayerManager manager;
-    private final ActionManager actionManager;
+   @Inject
+   public FakeplayerAutofishManager(FakeplayerManager manager, ActionManager actionManager) {
+      this.manager = manager;
+      this.actionManager = actionManager;
+   }
 
-    @Inject
-    public FakeplayerAutofishManager(FakeplayerManager manager, ActionManager actionManager) {
-        super();
-        this.manager = manager;
-        this.actionManager = actionManager;
-    }
+   public boolean isAutofish(@NotNull Player fake) {
+      return fake.hasMetadata("fakeplayer:autofish");
+   }
 
-    public boolean isAutofish(@NotNull Player fake) {
-        return fake.hasMetadata("fakeplayer:autofish");
-    }
+   public void setAutofish(@NotNull Player target, boolean autofish) {
+      if (!autofish) {
+         target.removeMetadata("fakeplayer:autofish", Main.getInstance());
+      } else {
+         target.setMetadata("fakeplayer:autofish", new FixedMetadataValue(Main.getInstance(), true));
+      }
+   }
 
-    public void setAutofish(@NotNull Player target, boolean autofish) {
-        if (!autofish) {
-            target.removeMetadata("fakeplayer:autofish", Main.getInstance());
-        } else {
-            target.setMetadata("fakeplayer:autofish", new FixedMetadataValue(Main.getInstance(), true));
-        }
-
-    }
-
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
-    public void autoFishing(@NotNull PlayerFishEvent event) {
-        if (event.getState() == State.BITE) {
-            Player player = event.getPlayer();
-
-            if (!this.manager.isNotFake(player)) {
-                if (player.hasMetadata("fakeplayer:autofish")) {
-                    Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
-                        this.actionManager.setAction(player, ActionType.USE, ActionSetting.once());
-                        Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
-                            this.actionManager.setAction(player, ActionType.USE, ActionSetting.once());
-                        }, 20L);
-                    }, 1L);
-                }
+   @EventHandler(
+      ignoreCancelled = true,
+      priority = EventPriority.MONITOR
+   )
+   public void autoFishing(@NotNull PlayerFishEvent event) {
+      if (event.getState() == State.BITE) {
+         Player player = event.getPlayer();
+         if (!this.manager.isNotFake(player)) {
+            if (player.hasMetadata("fakeplayer:autofish")) {
+               Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+                  this.actionManager.setAction(player, ActionType.USE, ActionSetting.once());
+                  Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> this.actionManager.setAction(player, ActionType.USE, ActionSetting.once()), 20L);
+               }, 1L);
             }
-        }
-    }
+         }
+      }
+   }
 }

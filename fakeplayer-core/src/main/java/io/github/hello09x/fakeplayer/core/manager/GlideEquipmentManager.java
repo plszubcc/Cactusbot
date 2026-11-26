@@ -13,82 +13,68 @@ import org.jetbrains.annotations.Nullable;
 
 @Singleton
 public class GlideEquipmentManager {
+   private final Map<UUID, GlideEquipmentManager.GlideEquipmentState> states = new ConcurrentHashMap<>();
 
-    private final Map<UUID, GlideEquipmentManager.GlideEquipmentState> states = new ConcurrentHashMap();
+   public GlideEquipmentManager() {
+   }
 
-    public GlideEquipmentManager() {
-        super();
-    }
-
-    public boolean equipElytraForGlide(@NotNull Player player) {
-        PlayerInventory inventory = player.getInventory();
-        ItemStack currentChest = inventory.getChestplate();
-
-        if (this.isElytra(currentChest)) {
-            return true;
-        } else {
-            int slot = this.findElytraSlot(inventory);
-
-            if (slot < 0) {
-                return false;
+   public boolean equipElytraForGlide(@NotNull Player player) {
+      PlayerInventory inventory = player.getInventory();
+      ItemStack currentChest = inventory.getChestplate();
+      if (this.isElytra(currentChest)) {
+         return true;
+      } else {
+         int slot = this.findElytraSlot(inventory);
+         if (slot < 0) {
+            return false;
+         } else {
+            ItemStack elytra = inventory.getItem(slot);
+            if (!this.isElytra(elytra)) {
+               return false;
             } else {
-                ItemStack elytra = inventory.getItem(slot);
-
-                if (!this.isElytra(elytra)) {
-                    return false;
-                } else {
-                    ItemStack previousChest = currentChest != null && !currentChest.getType().isAir() ? currentChest.clone() : null;
-
-                    inventory.setChestplate(elytra.clone());
-                    inventory.setItem(slot, previousChest);
-                    this.states.put(player.getUniqueId(), new GlideEquipmentManager.GlideEquipmentState(slot, previousChest));
-                    return true;
-                }
+               ItemStack previousChest = currentChest != null && !currentChest.getType().isAir() ? currentChest.clone() : null;
+               inventory.setChestplate(elytra.clone());
+               inventory.setItem(slot, previousChest);
+               this.states.put(player.getUniqueId(), new GlideEquipmentManager.GlideEquipmentState(slot, previousChest));
+               return true;
             }
-        }
-    }
+         }
+      }
+   }
 
-    public void restoreChestplate(@NotNull Player player) {
-        GlideEquipmentManager.GlideEquipmentState state = (GlideEquipmentManager.GlideEquipmentState) this.states.remove(player.getUniqueId());
-
-        if (state != null) {
-            PlayerInventory inventory = player.getInventory();
-            ItemStack equipped = inventory.getChestplate();
-            ItemStack swappedSlotItem = inventory.getItem(state.slot());
-
-            if (this.isElytra(equipped)) {
-                inventory.setChestplate(state.previousChestplate());
-                inventory.setItem(state.slot(), equipped.clone());
-                if (state.previousChestplate() == null && swappedSlotItem != null && !swappedSlotItem.getType().isAir()) {
-                    ItemStack current = inventory.getItem(state.slot());
-
-                    if (current == null || current.getType().isAir()) {
-                        inventory.setItem(state.slot(), swappedSlotItem);
-                    }
-                }
-
+   public void restoreChestplate(@NotNull Player player) {
+      GlideEquipmentManager.GlideEquipmentState state = this.states.remove(player.getUniqueId());
+      if (state != null) {
+         PlayerInventory inventory = player.getInventory();
+         ItemStack equipped = inventory.getChestplate();
+         ItemStack swappedSlotItem = inventory.getItem(state.slot());
+         if (this.isElytra(equipped)) {
+            inventory.setChestplate(state.previousChestplate());
+            inventory.setItem(state.slot(), equipped.clone());
+            if (state.previousChestplate() == null && swappedSlotItem != null && !swappedSlotItem.getType().isAir()) {
+               ItemStack current = inventory.getItem(state.slot());
+               if (current == null || current.getType().isAir()) {
+                  inventory.setItem(state.slot(), swappedSlotItem);
+               }
             }
-        }
-    }
+         }
+      }
+   }
 
-    private int findElytraSlot(@NotNull PlayerInventory inventory) {
-        for (int slot = 0; slot < 36; ++slot) {
-            if (this.isElytra(inventory.getItem(slot))) {
-                return slot;
-            }
-        }
+   private int findElytraSlot(@NotNull PlayerInventory inventory) {
+      for (int slot = 0; slot < 36; slot++) {
+         if (this.isElytra(inventory.getItem(slot))) {
+            return slot;
+         }
+      }
 
-        return -1;
-    }
+      return -1;
+   }
 
-    private boolean isElytra(@Nullable ItemStack item) {
-        return item != null && item.getType() == Material.ELYTRA && item.getAmount() > 0;
-    }
+   private boolean isElytra(@Nullable ItemStack item) {
+      return item != null && item.getType() == Material.ELYTRA && item.getAmount() > 0;
+   }
 
-    private static record GlideEquipmentState(int slot, @Nullable ItemStack previousChestplate) {
-
-        private GlideEquipmentState {
-            super();
-        }
-    }
+   private record GlideEquipmentState(int slot, @Nullable ItemStack previousChestplate) {
+   }
 }

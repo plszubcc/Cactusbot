@@ -12,59 +12,61 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class LookAtEntityAction implements Action {
+   @NotNull
+   private final NMSServerPlayer player;
 
-    private final @NotNull NMSServerPlayer player;
+   public LookAtEntityAction(@NotNull NMSServerPlayer player) {
+      this.player = player;
+   }
 
-    public LookAtEntityAction(@NotNull NMSServerPlayer player) {
-        super();
-        this.player = player;
-    }
-
-    public boolean tick() {
-        Player bukkitPlayer = this.player.getPlayer();
-        Collection<Damageable> entities = bukkitPlayer.getLocation().getNearbyEntitiesByType(Damageable.class, 4.5D, 4.5D, 4.5D);
-
-        if (entities.isEmpty()) {
+   @Override
+   public boolean tick() {
+      Player bukkitPlayer = this.player.getPlayer();
+      Collection<Damageable> entities = bukkitPlayer.getLocation().getNearbyEntitiesByType(Damageable.class, 4.5, 4.5, 4.5);
+      if (entities.isEmpty()) {
+         return false;
+      } else {
+         Entity entity = this.getNearestEntity(bukkitPlayer, entities);
+         if (entity == null) {
             return false;
-        } else {
-            Entity entity = this.getNearestEntity(bukkitPlayer, entities);
+         } else {
+            bukkitPlayer.lookAt(entity, LookAnchor.EYES, LookAnchor.EYES);
+            this.player.resetLastActionTime();
+            return true;
+         }
+      }
+   }
 
-            if (entity == null) {
-                return false;
+   @Override
+   public void inactiveTick() {
+   }
+
+   @Override
+   public void stop() {
+   }
+
+   @Nullable
+   private Entity getNearestEntity(@NotNull Player player, @NotNull Collection<? extends Entity> entities) {
+      if (entities.isEmpty()) {
+         return null;
+      } else {
+         Location loc = player.getLocation();
+         Entity nearest = null;
+         double distance = 0.0;
+
+         for (Entity entity : entities) {
+            if (nearest == null) {
+               nearest = entity;
             } else {
-                bukkitPlayer.lookAt(entity, LookAnchor.EYES, LookAnchor.EYES);
-                this.player.resetLastActionTime();
-                return true;
+               double d = loc.distance(entity.getLocation());
+               if (d < distance) {
+                  nearest = entity;
+                  distance = d;
+               }
             }
-        }
-    }
+         }
 
-    public void inactiveTick() {}
-
-    public void stop() {}
-
-    private @Nullable Entity getNearestEntity(@NotNull Player player, @NotNull Collection<? extends Entity> entities) {
-        if (entities.isEmpty()) {
-            return null;
-        } else {
-            Location loc = player.getLocation();
-            Entity nearest = null;
-            double distance = 0.0D;
-
-            for (Entity entity : entities) {
-                if (nearest == null) {
-                    nearest = entity;
-                } else {
-                    double d = loc.distance(entity.getLocation());
-
-                    if (d < distance) {
-                        nearest = entity;
-                        distance = d;
-                    }
-                }
-            }
-
-            return nearest;
-        }
-    }
+         return nearest;
+      }
+   }
 }

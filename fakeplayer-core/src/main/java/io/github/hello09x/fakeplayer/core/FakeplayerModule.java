@@ -24,53 +24,53 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class FakeplayerModule extends AbstractModule {
+   private static final Logger log = Main.getInstance().getLogger();
 
-    private static final Logger log = Main.getInstance().getLogger();
+   public FakeplayerModule() {
+   }
 
-    public FakeplayerModule() {
-        super();
-    }
+   protected void configure() {
+      super.bind(Plugin.class).toInstance(Main.getInstance());
+   }
 
-    protected void configure() {
-        super.bind(Plugin.class).toInstance(Main.getInstance());
-    }
+   @Provides
+   @Singleton
+   @NotNull
+   public InvseeManager invseeManager(FakeplayerConfig config, FakeplayerManager fakeplayerManager, FakeplayerList fakeplayerList) {
+      return (InvseeManager)(switch (config.getInvseeImplement()) {
+         case SIMPLE -> new SimpleInvseeManagerImpl(fakeplayerManager, fakeplayerList);
+         case AUTO -> {
+            if (Bukkit.getPluginManager().isPluginEnabled("OpenInv") && ClassUtils.isClassExists("com.lishid.openinv.IOpenInv")) {
+               log.info("Using OpenInv as invsee implement");
+               yield new OpenInvInvseeManagerImpl(fakeplayerManager, fakeplayerList);
+            } else {
+               log.info("Using simple invsee implement");
+               yield new SimpleInvseeManagerImpl(fakeplayerManager, fakeplayerList);
+            }
+         }
+      });
+   }
 
-    @Provides
-    @Singleton
-    public @NotNull InvseeManager invseeManager(FakeplayerConfig config, FakeplayerManager fakeplayerManager, FakeplayerList fakeplayerList) {
-        Object object;
+   @Provides
+   @Singleton
+   @NotNull
+   private NMSBridge nmsBridge() {
+      return ServiceLoader.load(NMSBridge.class, NMSBridge.class.getClassLoader())
+         .stream()
+         .map(Provider::get)
+         .filter(NMSBridge::isSupported)
+         .findAny()
+         .orElse(null);
+   }
 
-        switch (config.getInvseeImplement()) {
-            case SIMPLE:
-                object = new SimpleInvseeManagerImpl(fakeplayerManager, fakeplayerList);
-                break;
-            case AUTO:
-                if (Bukkit.getPluginManager().isPluginEnabled("OpenInv") && ClassUtils.isClassExists("com.lishid.openinv.IOpenInv")) {
-                    FakeplayerModule.log.info("Using OpenInv as invsee implement");
-                    object = new OpenInvInvseeManagerImpl(fakeplayerManager, fakeplayerList);
-                } else {
-                    FakeplayerModule.log.info("Using simple invsee implement");
-                    object = new SimpleInvseeManagerImpl(fakeplayerManager, fakeplayerList);
-                }
-                break;
-            default:
-                throw new IncompatibleClassChangeError();
-        }
-
-        return (InvseeManager) object;
-    }
-
-    @Provides
-    @Singleton
-    private @NotNull NMSBridge nmsBridge() {
-        NMSBridge bridge = (NMSBridge) ServiceLoader.load(NMSBridge.class, NMSBridge.class.getClassLoader()).stream().map(Provider::get).filter(NMSBridge::isSupported).findAny().orElse((Object) null);
-
-        return bridge;
-    }
-
-    @Singleton
-    @Provides
-    private @Nullable FakeplayerPlaceholderExpansion fakeplayerPlaceholderExpansion(FakeplayerManager fakeplayerManager, ActionManager actionManager, PluginTranslator translator) {
-        return Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI") && ClassUtils.isClassExists("me.clip.placeholderapi.expansion.PlaceholderExpansion") ? new FakeplayerPlaceholderExpansionImpl(fakeplayerManager, actionManager, translator) : null;
-    }
+   @Singleton
+   @Provides
+   @Nullable
+   private FakeplayerPlaceholderExpansion fakeplayerPlaceholderExpansion(
+      FakeplayerManager fakeplayerManager, ActionManager actionManager, PluginTranslator translator
+   ) {
+      return Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI") && ClassUtils.isClassExists("me.clip.placeholderapi.expansion.PlaceholderExpansion")
+         ? new FakeplayerPlaceholderExpansionImpl(fakeplayerManager, actionManager, translator)
+         : null;
+   }
 }

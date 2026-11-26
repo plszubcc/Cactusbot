@@ -10,31 +10,35 @@ import net.minecraft.server.level.EntityPlayer;
 import net.minecraft.server.players.PlayerList;
 
 public class FakePlayerAdvancements extends AdvancementDataPlayer {
+   public FakePlayerAdvancements(DataFixer datafixer, PlayerList playerlist, AdvancementDataWorld manager, Path path, EntityPlayer player) {
+      super(datafixer, playerlist, manager, path, player);
+      this.b();
+   }
 
-    public FakePlayerAdvancements(DataFixer datafixer, PlayerList playerlist, AdvancementDataWorld manager, Path path, EntityPlayer player) {
-        super(datafixer, playerlist, manager, path, player);
-        this.b();
-    }
+   public boolean a(AdvancementHolder advancementholder, String s) {
+      return false;
+   }
 
-    public boolean a(AdvancementHolder advancementholder, String s) {
-        return false;
-    }
+   public void a(EntityPlayer entityplayer, boolean flag) {
+   }
 
-    public void a(EntityPlayer entityplayer, boolean flag) {}
+   public AdvancementProgress b(AdvancementHolder advancement) {
+      return new AdvancementProgress();
+   }
 
-    public AdvancementProgress b(AdvancementHolder advancement) {
-        return new AdvancementProgress();
-    }
+   public boolean b(AdvancementHolder advancement, String s) {
+      return false;
+   }
 
-    public boolean b(AdvancementHolder advancement, String s) {
-        return false;
-    }
+   public void b() {
+   }
 
-    public void b() {}
+   public void a(EntityPlayer player) {
+   }
 
-    public void a(EntityPlayer player) {}
+   public void a(AdvancementHolder advancement) {
+   }
 
-    public void a(AdvancementHolder advancement) {}
-
-    public void a() {}
+   public void a() {
+   }
 }

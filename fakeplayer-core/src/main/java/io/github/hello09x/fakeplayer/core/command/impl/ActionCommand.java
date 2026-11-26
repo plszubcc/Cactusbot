@@ -17,34 +17,29 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class ActionCommand extends AbstractCommand {
+   private final ActionManager actionManager;
+   private final FakeplayerAutofishManager autofishManager;
 
-    private final ActionManager actionManager;
-    private final FakeplayerAutofishManager autofishManager;
+   @Inject
+   public ActionCommand(ActionManager actionManager, FakeplayerAutofishManager autofishManager) {
+      this.actionManager = actionManager;
+      this.autofishManager = autofishManager;
+   }
 
-    @Inject
-    public ActionCommand(ActionManager actionManager, FakeplayerAutofishManager autofishManager) {
-        super();
-        this.actionManager = actionManager;
-        this.autofishManager = autofishManager;
-    }
+   @NotNull
+   public CommandExecutor action(@NotNull ActionType action, @NotNull ActionSetting setting) {
+      return (sender, args) -> this.action(sender, args, action, setting.clone());
+   }
 
-    public @NotNull CommandExecutor action(@NotNull ActionType action, @NotNull ActionSetting setting) {
-        return (senderx, argsx) -> {
-            this.action(senderx, argsx, action, setting.clone());
-        };
-    }
+   public void action(@NotNull CommandSender sender, @NotNull CommandArguments args, @NotNull ActionType action, @NotNull ActionSetting setting) throws WrapperCommandSyntaxException {
+      Player fake = super.getFakeplayer(sender, args);
+      if (action == ActionType.USE && fake.getInventory().getItemInMainHand().getType() == Material.FISHING_ROD && this.autofishManager.isAutofish(fake)) {
+         setting = ActionSetting.once();
+      }
 
-    public void action(@NotNull CommandSender sender, @NotNull CommandArguments args, @NotNull ActionType action, @NotNull ActionSetting setting) throws WrapperCommandSyntaxException {
-        Player fake = super.getFakeplayer(sender, args);
-
-        if (action == ActionType.USE && fake.getInventory().getItemInMainHand().getType() == Material.FISHING_ROD && this.autofishManager.isAutofish(fake)) {
-            setting = ActionSetting.once();
-        }
-
-        this.actionManager.setAction(fake, action, setting);
-        if (!setting.equals(ActionSetting.once())) {
-            sender.sendMessage(MessageUtils.translatableWithPrefix("fakeplayer.command.generic.success"));
-        }
-
-    }
+      this.actionManager.setAction(fake, action, setting);
+      if (!setting.equals(ActionSetting.once())) {
+         sender.sendMessage(MessageUtils.translatableWithPrefix("fakeplayer.command.generic.success"));
+      }
+   }
 }

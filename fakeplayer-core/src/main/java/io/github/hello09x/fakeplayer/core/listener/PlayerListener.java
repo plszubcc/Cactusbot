@@ -14,31 +14,26 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class PlayerListener implements Listener {
+   private final FakeplayerManager manager;
 
-    private final FakeplayerManager manager;
+   @Inject
+   public PlayerListener(FakeplayerManager manager) {
+      this.manager = manager;
+   }
 
-    @Inject
-    public PlayerListener(FakeplayerManager manager) {
-        super();
-        this.manager = manager;
-    }
-
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
-    public void onSneak(@NotNull PlayerToggleSneakEvent event) {
-        Player player = event.getPlayer();
-        List<Entity> passengers = player.getPassengers();
-
-        if (!passengers.isEmpty()) {
-            for (Entity passenger : passengers) {
-                if (passenger instanceof Player) {
-                    Player target = (Player) passenger;
-
-                    if (this.manager.isFake(target)) {
-                        player.removePassenger(target);
-                    }
-                }
+   @EventHandler(
+      ignoreCancelled = true,
+      priority = EventPriority.MONITOR
+   )
+   public void onSneak(@NotNull PlayerToggleSneakEvent event) {
+      Player player = event.getPlayer();
+      List<Entity> passengers = player.getPassengers();
+      if (!passengers.isEmpty()) {
+         for (Entity passenger : passengers) {
+            if (passenger instanceof Player target && this.manager.isFake(target)) {
+               player.removePassenger(target);
             }
-
-        }
-    }
+         }
+      }
+   }
 }

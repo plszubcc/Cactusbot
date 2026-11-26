@@ -11,14 +11,11 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class CritCommand extends AbstractCommand {
+   public CritCommand() {
+   }
 
-    public CritCommand() {
-        super();
-    }
-
-    public void crit(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
-        Player fake = this.getFakeplayer(sender, args);
-
-        fake.setMetadata("fakeplayer:force_crit", new FixedMetadataValue(Main.getInstance(), true));
-    }
+   public void crit(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
+      Player fake = this.getFakeplayer(sender, args);
+      fake.setMetadata("fakeplayer:force_crit", new FixedMetadataValue(Main.getInstance(), true));
+   }
 }

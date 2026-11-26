@@ -8,16 +8,14 @@ import org.bukkit.craftbukkit.v1_21_R7.CraftWorld;
 import org.jetbrains.annotations.NotNull;
 
 public class NMSServerLevelImpl implements NMSServerLevel {
+   private final WorldServer handle;
 
-    private final WorldServer handle;
+   public NMSServerLevelImpl(@NotNull World world) {
+      this.handle = ((CraftWorld)world).getHandle();
+   }
 
-    public NMSServerLevelImpl(@NotNull World world) {
-        super();
-        this.handle = ((CraftWorld) world).getHandle();
-    }
-
-    @Generated
-    public WorldServer getHandle() {
-        return this.handle;
-    }
+   @Generated
+   public WorldServer getHandle() {
+      return this.handle;
+   }
 }

@@ -15,21 +15,20 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class CustomActionCommand extends AbstractCommand {
+   private final CustomActionManager customActionManager;
 
-    private final CustomActionManager customActionManager;
+   @Inject
+   public CustomActionCommand(CustomActionManager customActionManager) {
+      this.customActionManager = customActionManager;
+   }
 
-    @Inject
-    public CustomActionCommand(CustomActionManager customActionManager) {
-        super();
-        this.customActionManager = customActionManager;
-    }
-
-    public void execute(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
-        String actionName = String.valueOf(args.get("action"));
-        Player bot = this.getFakeplayer(sender, args);
-
-        if (!this.customActionManager.execute(actionName, bot)) {
-            throw CommandAPI.failWithString(ComponentUtils.toString(Component.translatable("fakeplayer.command.action.error.not-found", actionName), TranslatorUtils.getLocale(sender)));
-        }
-    }
+   public void execute(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
+      String actionName = String.valueOf(args.get("action"));
+      Player bot = this.getFakeplayer(sender, args);
+      if (!this.customActionManager.execute(actionName, bot)) {
+         throw CommandAPI.failWithString(
+            ComponentUtils.toString(Component.translatable("fakeplayer.command.action.error.not-found", actionName), TranslatorUtils.getLocale(sender))
+         );
+      }
+   }
 }

@@ -4,7 +4,6 @@ import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
 
 public interface NMSServer {
-
-    @NotNull
-    NMSServerPlayer newPlayer(@NotNull UUID uuid, @NotNull String s);
+   @NotNull
+   NMSServerPlayer newPlayer(@NotNull UUID var1, @NotNull String var2);
 }

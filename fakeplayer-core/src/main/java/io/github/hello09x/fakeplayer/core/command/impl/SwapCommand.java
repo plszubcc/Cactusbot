@@ -9,14 +9,11 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class SwapCommand extends AbstractCommand {
+   public SwapCommand() {
+   }
 
-    public SwapCommand() {
-        super();
-    }
-
-    public void swap(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
-        Player fake = super.getFakeplayer(sender, args);
-
-        this.bridge.fromPlayer(fake).swapItemWithOffhand();
-    }
+   public void swap(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
+      Player fake = super.getFakeplayer(sender, args);
+      this.bridge.fromPlayer(fake).swapItemWithOffhand();
+   }
 }

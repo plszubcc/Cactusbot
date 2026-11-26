@@ -14,34 +14,15 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public class ActionTickerImpl extends BaseActionTicker implements ActionTicker {
-
-    public ActionTickerImpl(@NotNull NMSBridge nms, @NotNull Player player, @NotNull ActionType action, @NotNull ActionSetting setting) {
-        super(nms, player, action, setting);
-        if (this.action == null) {
-            Object object;
-
-            switch (action) {
-                case ATTACK:
-                    object = new AttackAction(((CraftPlayer) player).getHandle());
-                    break;
-                case MINE:
-                    object = new MineAction(((CraftPlayer) player).getHandle());
-                    break;
-                case USE:
-                    object = new UseAction(((CraftPlayer) player).getHandle());
-                    break;
-                case JUMP:
-                case LOOK_AT_NEAREST_ENTITY:
-                case DROP_INVENTORY:
-                case DROP_STACK:
-                case DROP_ITEM:
-                    throw new UnsupportedOperationException();
-                default:
-                    throw new MatchException((String) null, (Throwable) null);
-            }
-
-            this.action = (Action) object;
-        }
-
-    }
+   public ActionTickerImpl(@NotNull NMSBridge nms, @NotNull Player player, @NotNull ActionType action, @NotNull ActionSetting setting) {
+      super(nms, player, action, setting);
+      if (this.action == null) {
+         this.action = (Action)(switch (action) {
+            case ATTACK -> new AttackAction(((CraftPlayer)player).getHandle());
+            case MINE -> new MineAction(((CraftPlayer)player).getHandle());
+            case USE -> new UseAction(((CraftPlayer)player).getHandle());
+            case JUMP, LOOK_AT_NEAREST_ENTITY, DROP_INVENTORY, DROP_STACK, DROP_ITEM -> throw new UnsupportedOperationException();
+         });
+      }
+   }
 }

@@ -15,22 +15,21 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class InvseeCommand extends AbstractCommand {
+   private final InvseeManager invseeManager;
 
-    private final InvseeManager invseeManager;
+   @Inject
+   public InvseeCommand(InvseeManager invseeManager) {
+      this.invseeManager = invseeManager;
+   }
 
-    @Inject
-    public InvseeCommand(InvseeManager invseeManager) {
-        super();
-        this.invseeManager = invseeManager;
-    }
-
-    public void invsee(@NotNull Player sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
-        Player fake = super.getFakeplayer(sender, args);
-
-        if (!Objects.equals(sender.getLocation().getWorld(), fake.getLocation().getWorld())) {
-            throw CommandAPI.failWithString(ComponentUtils.toString(Component.translatable("fakeplayer.command.invsee.error.not-the-same-world"), TranslatorUtils.getLocale(sender)));
-        } else {
-            this.invseeManager.invsee(sender, fake);
-        }
-    }
+   public void invsee(@NotNull Player sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
+      Player fake = super.getFakeplayer(sender, args);
+      if (!Objects.equals(sender.getLocation().getWorld(), fake.getLocation().getWorld())) {
+         throw CommandAPI.failWithString(
+            ComponentUtils.toString(Component.translatable("fakeplayer.command.invsee.error.not-the-same-world"), TranslatorUtils.getLocale(sender))
+         );
+      } else {
+         this.invseeManager.invsee(sender, fake);
+      }
+   }
 }

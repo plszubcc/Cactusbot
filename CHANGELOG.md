@@ -1,5 +1,14 @@
 # Changelog
 
+## Recovered source build (2026-11-26)
+
+- Recovered the source of `cactusbot` v0.3.19 from `Bot +.jar` with Vineflower.
+- Rebuilt the Maven multi-module project and fixed decompiler artifacts.
+- Kept the arena/queue/regen/replay improvements from the previous repository.
+- Removed the decompiled third-party dependency dump from the source tree.
+
+The entries below are inherited from the coderxi1 fork.
+
 ## [1.2.0](https://github.com/coderxi1/minecraft-fakeplayer/compare/v1.1.3...v1.2.0) (2026-03-24)
 
 

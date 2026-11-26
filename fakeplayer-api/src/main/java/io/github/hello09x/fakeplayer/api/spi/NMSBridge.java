@@ -8,38 +8,37 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public interface NMSBridge {
+   @NotNull
+   NMSEntity fromEntity(@NotNull Entity var1);
 
-    @NotNull
-    NMSEntity fromEntity(@NotNull Entity entity);
+   @NotNull
+   NMSServer fromServer(@NotNull Server var1);
 
-    @NotNull
-    NMSServer fromServer(@NotNull Server server);
+   @NotNull
+   NMSServerLevel fromWorld(@NotNull World var1);
 
-    @NotNull
-    NMSServerLevel fromWorld(@NotNull World world);
+   @NotNull
+   NMSServerPlayer fromPlayer(@NotNull Player var1);
 
-    @NotNull
-    NMSServerPlayer fromPlayer(@NotNull Player player);
+   @NotNull
+   NMSNetwork createNetwork(@NotNull InetAddress var1);
 
-    @NotNull
-    NMSNetwork createNetwork(@NotNull InetAddress inetaddress);
+   boolean isSupported();
 
-    boolean isSupported();
+   @NotNull
+   ActionTicker createAction(@NotNull Player var1, @NotNull ActionType var2, @NotNull ActionSetting var3);
 
-    @NotNull
-    ActionTicker createAction(@NotNull Player player, @NotNull ActionType actiontype, @NotNull ActionSetting actionsetting);
+   boolean criticalAttack(@NotNull Player var1);
 
-    boolean criticalAttack(@NotNull Player player);
+   boolean maceAttack(@NotNull Player var1);
 
-    boolean maceAttack(@NotNull Player player);
+   boolean placeHeldBlock(@NotNull Player var1, double var2, @NotNull PlaceSide var4);
 
-    boolean placeHeldBlock(@NotNull Player player, double d0, @NotNull PlaceSide placeside);
+   boolean placeCrystal(@NotNull Player var1, double var2);
 
-    boolean placeCrystal(@NotNull Player player, double d0);
+   boolean breakCrystal(@NotNull Player var1, double var2);
 
-    boolean breakCrystal(@NotNull Player player, double d0);
+   boolean useLavaBucketOnTarget(@NotNull Player var1, @NotNull Player var2, double var3);
 
-    boolean useLavaBucketOnTarget(@NotNull Player player, @NotNull Player player1, double d0);
-
-    boolean pickupFluid(@NotNull Player player, double d0);
+   boolean pickupFluid(@NotNull Player var1, double var2);
 }

@@ -16,44 +16,38 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class PresetHitTracker implements Listener {
+   private final FakeplayerManager fakeplayerManager;
+   private final Map<UUID, PresetHitTracker.HitRecord> lastHits = new ConcurrentHashMap<>();
 
-    private final FakeplayerManager fakeplayerManager;
-    private final Map<UUID, PresetHitTracker.HitRecord> lastHits = new ConcurrentHashMap();
+   @Inject
+   public PresetHitTracker(FakeplayerManager fakeplayerManager) {
+      this.fakeplayerManager = fakeplayerManager;
+   }
 
-    @Inject
-    public PresetHitTracker(FakeplayerManager fakeplayerManager) {
-        super();
-        this.fakeplayerManager = fakeplayerManager;
-    }
+   @EventHandler(
+      ignoreCancelled = true,
+      priority = EventPriority.MONITOR
+   )
+   public void onEntityDamage(@NotNull EntityDamageByEntityEvent event) {
+      if (event.getDamager() instanceof Player bot && !this.fakeplayerManager.isNotFake(bot)) {
+         Entity target = event.getEntity();
+         this.lastHits.put(bot.getUniqueId(), new PresetHitTracker.HitRecord(target.getUniqueId(), System.currentTimeMillis()));
+      }
+   }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
-    public void onEntityDamage(@NotNull EntityDamageByEntityEvent event) {
-        Entity target = event.getDamager();
+   public boolean targetHitRecently(@NotNull Player bot, @NotNull Entity target, int withinTicks) {
+      PresetHitTracker.HitRecord record = this.lastHits.get(bot.getUniqueId());
+      if (record == null) {
+         return false;
+      } else {
+         return !record.targetId().equals(target.getUniqueId()) ? false : System.currentTimeMillis() - record.atMillis() <= withinTicks * 50L;
+      }
+   }
 
-        if (target instanceof Player bot) {
-            if (!this.fakeplayerManager.isNotFake(bot)) {
-                target = event.getEntity();
-                this.lastHits.put(bot.getUniqueId(), new PresetHitTracker.HitRecord(target.getUniqueId(), System.currentTimeMillis()));
-                return;
-            }
-        }
+   public void clear(@NotNull Player bot) {
+      this.lastHits.remove(bot.getUniqueId());
+   }
 
-    }
-
-    public boolean targetHitRecently(@NotNull Player bot, @NotNull Entity target, int withinTicks) {
-        PresetHitTracker.HitRecord record = (PresetHitTracker.HitRecord) this.lastHits.get(bot.getUniqueId());
-
-        return record == null ? false : (!record.targetId().equals(target.getUniqueId()) ? false : System.currentTimeMillis() - record.atMillis() <= (long) withinTicks * 50L);
-    }
-
-    public void clear(@NotNull Player bot) {
-        this.lastHits.remove(bot.getUniqueId());
-    }
-
-    private static record HitRecord(UUID targetId, long atMillis) {
-
-        private HitRecord {
-            super();
-        }
-    }
+   private record HitRecord(UUID targetId, long atMillis) {
+   }
 }

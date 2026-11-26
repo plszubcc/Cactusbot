@@ -11,19 +11,16 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class GlideCommand extends AbstractCommand {
+   private final GlideEquipmentManager glideEquipmentManager;
 
-    private final GlideEquipmentManager glideEquipmentManager;
+   @Inject
+   public GlideCommand(GlideEquipmentManager glideEquipmentManager) {
+      this.glideEquipmentManager = glideEquipmentManager;
+   }
 
-    @Inject
-    public GlideCommand(GlideEquipmentManager glideEquipmentManager) {
-        super();
-        this.glideEquipmentManager = glideEquipmentManager;
-    }
-
-    public void glide(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
-        Player fake = this.getFakeplayer(sender, args);
-
-        this.glideEquipmentManager.equipElytraForGlide(fake);
-        this.bridge.fromPlayer(fake).startFallFlying();
-    }
+   public void glide(@NotNull CommandSender sender, @NotNull CommandArguments args) throws WrapperCommandSyntaxException {
+      Player fake = this.getFakeplayer(sender, args);
+      this.glideEquipmentManager.equipElytraForGlide(fake);
+      this.bridge.fromPlayer(fake).startFallFlying();
+   }
 }
